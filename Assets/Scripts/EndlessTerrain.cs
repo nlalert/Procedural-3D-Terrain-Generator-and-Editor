@@ -8,16 +8,18 @@ public class EndlessTerrain : MonoBehaviour
 {
     public const float maxViewDst = 450;
     public Transform viewer;
-
+    public Material mapMaterial;
     public static Vector2 viewerPosition;
+    static MapGenerator mapGenerator;
     int chunkSize;
-    int chunkVisibleInViewDst;
+    int chunksVisibleInViewDst;
 
     Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
     List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
     void Start() {
+        mapGenerator = FindObjectOfType<MapGenerator>();
         chunkSize = MapGenerator.mapChunkSize - 1;
-        chunkVisibleInViewDst = Mathf.RoundToInt(maxViewDst/chunkSize);
+        chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst/chunkSize);
     }
 
     void Update() {
@@ -36,18 +38,18 @@ public class EndlessTerrain : MonoBehaviour
         int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x/chunkSize);
         int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y/chunkSize);
 
-        for (int yOffset = -chunkVisibleInViewDst; yOffset <= chunkVisibleInViewDst; yOffset++) {
-            for (int xOffset = -chunkVisibleInViewDst; xOffset <= chunkVisibleInViewDst; xOffset++) {
+        for (int yOffset = -chunksVisibleInViewDst; yOffset <= chunksVisibleInViewDst; yOffset++) {
+            for (int xOffset = -chunksVisibleInViewDst; xOffset <= chunksVisibleInViewDst; xOffset++) {
                 Vector2 viewChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
 
                 if(terrainChunkDictionary.ContainsKey(viewChunkCoord)) {
                     terrainChunkDictionary[viewChunkCoord].UpdateTerrainChunk();
-                    if(terrainChunkDictionary[viewChunkCoord].isVisible()){
+                    if(terrainChunkDictionary[viewChunkCoord].IsVisible()){
                         terrainChunksVisibleLastUpdate.Add(terrainChunkDictionary[viewChunkCoord]);  
                     }
                 }
                 else{
-                    terrainChunkDictionary.Add(viewChunkCoord, new TerrainChunk(viewChunkCoord, chunkSize, transform));
+                    terrainChunkDictionary.Add(viewChunkCoord, new TerrainChunk(viewChunkCoord, chunkSize, transform, mapMaterial));
                 }
             }
         }
@@ -59,16 +61,34 @@ public class EndlessTerrain : MonoBehaviour
         Vector2 position;
         Bounds bounds;
 
-        public TerrainChunk(Vector2 coord, int size, Transform parent) {
+        MapData mapData;
+
+        MeshRenderer meshRenderer;
+        MeshFilter meshFilter;
+
+        public TerrainChunk(Vector2 coord, int size, Transform parent, Material material) {
             position = coord * size;
             bounds = new Bounds(position, Vector2.one * size);
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
-            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            meshObject = new GameObject("Terrain Chunk");
+            meshRenderer = meshObject.AddComponent<MeshRenderer>();
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshRenderer.material = material;
+
             meshObject.transform.position = positionV3;
-            meshObject.transform.localScale = Vector3.one * size / 10f;//plane default is 10
             meshObject.transform.parent = parent;
             SetVisible(false);
+
+            mapGenerator.RequestMapData(OnMapDataReceived);
+        }
+        
+        void OnMapDataReceived(MapData mapData) {
+            mapGenerator.RequestMeshData(mapData, OnMeshDataReceived);
+        }
+
+        void OnMeshDataReceived(MeshData meshData) {
+            meshFilter.mesh = meshData.CreateMesh();
         }
 
         public void UpdateTerrainChunk() {
@@ -81,7 +101,7 @@ public class EndlessTerrain : MonoBehaviour
             meshObject.SetActive(visible);
         }
 
-        public bool isVisible() {
+        public bool IsVisible() {
             return meshObject.activeSelf;
         }
     }
