@@ -23,13 +23,11 @@ public static class MeshGenerator {
 
         for (int x = 0; x < width; x += meshSimplificationIncrement) {
             for (int y = 0; y < height; y += meshSimplificationIncrement) {
-                // meshData.vertices[vertexIndex] = new Vector3(x - halfWidth, heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier, y - halfHeight);
-                // meshData.uvs[vertexIndex] = new Vector2(x/(float)width, y/(float)height);
+                // //start of negative side so mesh is center
 
-                //start of negative side so mesh is center
-                meshData.vertices[vertexIndex] = new Vector3(x - halfWidth, heightCurve.Evaluate(heightMap[width-1-x, height-1-y]) * heightMultiplier, y - halfHeight);
-                 
-                meshData.uvs[vertexIndex] = new Vector2(1f - x/(float)width, 1f - y/(float)height);//range 0-1
+                meshData.vertices[vertexIndex] = new Vector3(x - halfWidth, heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier, y - halfHeight);
+
+                meshData.uvs[vertexIndex] = new Vector2(x/(float)width, y/(float)height);
 
                 //clockwise index
                 if(x < width - 1 && y < height - 1) {//ignore right and bottom vertices
