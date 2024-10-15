@@ -15,10 +15,10 @@ public class EndlessTerrain : MonoBehaviour
     int chunksVisibleInViewDst;
 
     Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
-    List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();
+    List<TerrainChunk> terrainChunksVisibleLastUpdate = new List<TerrainChunk>();//keep track of chunk that visible last update
     void Start() {
         mapGenerator = FindObjectOfType<MapGenerator>();
-        chunkSize = MapGenerator.mapChunkSize - 1;
+        chunkSize = MapGenerator.mapChunkSize - 1;//240 x 240
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst/chunkSize);
     }
 
@@ -28,16 +28,18 @@ public class EndlessTerrain : MonoBehaviour
     }
 
     void UpdateVisibleChunks() {
-
+        //set all terrain chunk that visible in last update to be false
         for (int i = 0; i < terrainChunksVisibleLastUpdate.Count; i++){
             terrainChunksVisibleLastUpdate[i].SetVisible(false);
         }
 
         terrainChunksVisibleLastUpdate.Clear();
 
+        //coordinate relative to 0,0 -> -1,0 or 1,1 NOT real world position like 234,212
         int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x/chunkSize);
         int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y/chunkSize);
 
+        //all chunk visible around viewer
         for (int yOffset = -chunksVisibleInViewDst; yOffset <= chunksVisibleInViewDst; yOffset++) {
             for (int xOffset = -chunksVisibleInViewDst; xOffset <= chunksVisibleInViewDst; xOffset++) {
                 Vector2 viewChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
@@ -49,6 +51,7 @@ public class EndlessTerrain : MonoBehaviour
                     }
                 }
                 else{
+                    //create new terrain chunk
                     terrainChunkDictionary.Add(viewChunkCoord, new TerrainChunk(viewChunkCoord, chunkSize, transform, mapMaterial));
                 }
             }
@@ -79,8 +82,9 @@ public class EndlessTerrain : MonoBehaviour
             meshObject.transform.position = positionV3;
             meshObject.transform.parent = parent;
             SetVisible(false);
-
-            mapGenerator.RequestMapData(OnMapDataReceived);
+            
+            //main thread
+            mapGenerator.RequestMapData(OnMapDataReceived);//request the generatedChunk "once it's done". 
         }
         
         void OnMapDataReceived(MapData mapData) {
@@ -92,7 +96,7 @@ public class EndlessTerrain : MonoBehaviour
         }
 
         public void UpdateTerrainChunk() {
-            float viewerDstFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
+            float viewerDstFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));//smallest sqrt distance
             bool visible = viewerDstFromNearestEdge <= maxViewDst;
             SetVisible(visible);
         }

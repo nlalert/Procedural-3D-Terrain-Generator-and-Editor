@@ -45,16 +45,19 @@ public class MapGenerator : MonoBehaviour {
         }
     }
 
-    public void RequestMapData(Action<MapData> callback) {
-        ThreadStart threadStart = delegate {
+    //Thread
+    public void RequestMapData(Action<MapData> callback) {// receive void callback(Mapdata)
+        ThreadStart threadStart = delegate {//method 
             MapDataThread(callback);
         };
-
+        //new thread exectutes the MapDataThread method. 
         new Thread(threadStart).Start();
     }
 
+    //this method run from different thread (create from RequestMapData() ->MapDataThread(callback);)
     void MapDataThread(Action<MapData> callback) {
-        MapData mapData = GenerateMapData();
+        MapData mapData = GenerateMapData();//execute is this same thread
+        //lock queue
         lock (mapDataThreadInfoQueue) {
             mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
         }
@@ -75,6 +78,7 @@ public class MapGenerator : MonoBehaviour {
         }
     }
 
+    //Update Thread
     void Update() {
         if(mapDataThreadInfoQueue.Count > 0) {
             for (int i = 0; i < mapDataThreadInfoQueue.Count; i++){
@@ -118,7 +122,8 @@ public class MapGenerator : MonoBehaviour {
         if(octaves < 0) octaves = 0;
     }
 
-    struct MapThreadInfo<T> {
+    //struct for handle both mapData and meshData
+    readonly struct MapThreadInfo<T> {
         public readonly Action<T> callback;
         public readonly T parameter;
 
@@ -136,7 +141,8 @@ public struct TerrainType {
     public Color color;
 }
 
-public struct MapData {
+
+public readonly struct MapData {
     public readonly float[,] heightMap;
     public readonly Color[] colorMap;
 
