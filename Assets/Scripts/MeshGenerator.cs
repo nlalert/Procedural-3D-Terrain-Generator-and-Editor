@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public static class MeshGenerator {
@@ -8,34 +7,62 @@ public static class MeshGenerator {
     public static MeshData GenerateTerrainMesh(float[,] heightMap, float heightMultiplier, AnimationCurve _heightCurve, int levelOfDetail)
     {
         AnimationCurve heightCurve = new AnimationCurve(_heightCurve.keys);//each thread have their own AnimationCurve now
-        
-        int width = heightMap.GetLength(0);
-        int height = heightMap.GetLength(1);
-
-        float halfWidth = (width - 1) / 2f; 
-        float halfHeight = (height - 1) / 2f;
-
         int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2;//step 1 2 4 6 8 10 12
-        int verticesPerLine = (width - 1)/meshSimplificationIncrement + 1;
+        
+        int borderedSize = heightMap.GetLength(0);
+        int meshSize = borderedSize - 2 * meshSimplificationIncrement;
+        int meshSizeUnsimplified = borderedSize - 2;//use for calculate halfWidth halfHeight
 
-        MeshData meshData = new MeshData(verticesPerLine, verticesPerLine);
-        int vertexIndex = 0;
+        float halfWidth = (meshSizeUnsimplified - 1) / 2f; 
+        float halfHeight = (meshSizeUnsimplified - 1) / 2f;
 
-        for (int x = 0; x < width; x += meshSimplificationIncrement) {
-            for (int y = 0; y < height; y += meshSimplificationIncrement) {
-                // //start of negative side so mesh is center
+        int verticesPerLine = (meshSize - 1)/meshSimplificationIncrement + 1;
 
-                meshData.vertices[vertexIndex] = new Vector3(x - halfWidth, heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier, y - halfHeight);
+        MeshData meshData = new MeshData(verticesPerLine);
+        
+        //keep vertex index
+        //mesh is postive
+        //border is negative
+        int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
+        int meshVertexIndex = 0;
+        int borderVertexIndex = -1;
+        for (int x = 0; x < borderedSize; x += meshSimplificationIncrement) {
+            for (int y = 0; y < borderedSize; y += meshSimplificationIncrement) {
+                bool isBorderVertex = y == 0 || y == borderedSize - 1 || x == 0 || x == borderedSize - 1;
 
-                meshData.uvs[vertexIndex] = new Vector2(x/(float)width, y/(float)height);
+                if(isBorderVertex){
+                    vertexIndicesMap[x, y] = borderVertexIndex;
+                    borderVertexIndex--;//use negative index
+                }
+                else{
+                    vertexIndicesMap[x, y] = meshVertexIndex;
+                    meshVertexIndex++;//positive index
+                }
+            }
+        }
+
+        for (int x = 0; x < borderedSize; x += meshSimplificationIncrement) {
+            for (int y = 0; y < borderedSize; y += meshSimplificationIncrement) {
+                int vertexIndex = vertexIndicesMap[x, y];
+
+                //uv - meshSimplificationIncrement to centered
+                Vector2 percent = new Vector2((x-meshSimplificationIncrement)/(float)meshSize, ( y-meshSimplificationIncrement)/(float)meshSize);
+                
+                float height = heightCurve.Evaluate(heightMap[x, y]) * heightMultiplier;
+                // //start of negative side so mesh is center 
+                Vector3 vertexPosition = new Vector3(percent.x * meshSizeUnsimplified - halfWidth, height, percent.y * meshSizeUnsimplified - halfHeight);
+
+                meshData.AddVertex(vertexPosition, percent, vertexIndex);
 
                 //clockwise index
-                if(x < width - 1 && y < height - 1) {//ignore right and bottom vertices
-                    meshData.AddTriangle(vertexIndex, vertexIndex + verticesPerLine + 1, vertexIndex + verticesPerLine);//v,v+w+1,v+w
-                    meshData.AddTriangle(vertexIndex, vertexIndex + 1, vertexIndex + verticesPerLine + 1);//v, v+1, v+w+1
+                if(x < borderedSize - 1 && y < borderedSize - 1) {//ignore right and bottom vertices
+                    int a = vertexIndicesMap[x, y];
+                    int b = vertexIndicesMap[x + meshSimplificationIncrement, y];
+                    int c = vertexIndicesMap[x, y + meshSimplificationIncrement];
+                    int d = vertexIndicesMap[x + meshSimplificationIncrement, y + meshSimplificationIncrement];
+                    meshData.AddTriangle(a, c, d); // v, v+w, v+w+1
+                    meshData.AddTriangle(a, d, b); // v, v+w+1, v+1
                 }
-
-                vertexIndex++;
             } 
         }
         
@@ -44,30 +71,114 @@ public static class MeshGenerator {
 }
 
 public class MeshData {
-    public Vector3[] vertices;
-    public int[] triangles;//all vertices for drawing triangle
-    public Vector2[] uvs;
-    int triangleIndex;
+    Vector3[] vertices;
+    int[] triangles;//all vertices for drawing triangle
+    Vector2[] uvs;
+    
+    Vector3[] borderVertices;//vertices that won't be include in mesh
+    int[] borderTriangles;
 
-    public MeshData(int meshWidth, int meshHeight) {
-        vertices    = new Vector3[meshWidth * meshHeight];
-        uvs          = new Vector2[meshWidth * meshHeight];
-        triangles   = new int[(meshWidth - 1) * (meshHeight - 1) * 6]; //2 triangle * 3 vertices
+    int triangleIndex;
+    int borderTriangleIndex;
+
+    public MeshData(int verticesPerLine) {
+        vertices    = new Vector3[verticesPerLine * verticesPerLine];
+        uvs          = new Vector2[verticesPerLine * verticesPerLine];
+        triangles   = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6]; //2 triangle * 3 vertices
+
+        borderVertices = new Vector3[verticesPerLine * 4 + 4];//4 side of mesh vertex + 4 corner
+        borderTriangles = new int[24 * verticesPerLine];//6 vertices (for draw 2 triangle) * 4 * verticesPerLine in
+    }
+
+    public void AddVertex(Vector3 vertexPosition, Vector2 uv, int vertexIndex) {
+        if(vertexIndex < 0){//border
+            //start from -1 so flip to 1 and minus 1 to start with 0
+            borderVertices[-vertexIndex - 1] = vertexPosition;
+        }
+        else{//mesh
+            vertices[vertexIndex] = vertexPosition;
+            uvs[vertexIndex] = uv;
+        }
     }
 
     public void AddTriangle(int a, int b, int c) {
-        triangles[triangleIndex]     = a;
-        triangles[triangleIndex + 1] = b;
-        triangles[triangleIndex + 2] = c;
-        triangleIndex += 3;
+        if(a < 0 || b < 0 || c < 0){//border 
+            borderTriangles[borderTriangleIndex]     = a;
+            borderTriangles[borderTriangleIndex + 1] = b;
+            borderTriangles[borderTriangleIndex + 2] = c;
+            borderTriangleIndex += 3;
+        }
+        else{
+            triangles[triangleIndex]     = a;
+            triangles[triangleIndex + 1] = b;
+            triangles[triangleIndex + 2] = c;
+            triangleIndex += 3;
+        }
+
     }
 
+    Vector3[] CalculateNormals(){
+        Vector3[] vertexNormals = new Vector3[vertices.Length];
+        int triangleCount = triangles.Length /3;
+        for (int i = 0; i < triangleCount; i++)
+        {
+            int normalTriangleIndex = i * 3;
+            int vertexIndexA = triangles[normalTriangleIndex];
+            int vertexIndexB = triangles[normalTriangleIndex + 1];
+            int vertexIndexC = triangles[normalTriangleIndex + 2];
+
+            Vector3 triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+            vertexNormals[vertexIndexA] += triangleNormal;
+            vertexNormals[vertexIndexB] += triangleNormal;
+            vertexNormals[vertexIndexC] += triangleNormal;
+        }
+
+        int borderTriangleCount = borderTriangles.Length / 3;
+        for (int i = 0; i < borderTriangleCount; i++)
+        {
+            int normalTriangleIndex = i * 3;
+            int vertexIndexA = borderTriangles[normalTriangleIndex];
+            int vertexIndexB = borderTriangles[normalTriangleIndex + 1];
+            int vertexIndexC = borderTriangles[normalTriangleIndex + 2];
+
+            Vector3 triangleNormal = SurfaceNormalFromIndices(vertexIndexA, vertexIndexB, vertexIndexC);
+            if(vertexIndexA >= 0){
+                vertexNormals[vertexIndexA] += triangleNormal;
+            }
+            if(vertexIndexB >= 0){
+                vertexNormals[vertexIndexB] += triangleNormal;
+            }           
+            if(vertexIndexC >= 0){
+                vertexNormals[vertexIndexC] += triangleNormal;
+            }
+        }
+
+        for (int i = 0; i < vertexNormals.Length; i++)
+        {
+            vertexNormals[i].Normalize();
+        }
+
+        return vertexNormals;
+    }
+
+    //normal of single face with 3 indices
+    Vector3 SurfaceNormalFromIndices(int indexA, int indexB, int indexC){
+        Vector3 pointA = (indexA < 0) ? borderVertices[-indexA-1] : vertices[indexA];
+        Vector3 pointB = (indexB < 0) ? borderVertices[-indexB-1] : vertices[indexB];
+        Vector3 pointC = (indexC < 0) ? borderVertices[-indexC-1] : vertices[indexC];
+
+        //cross product to find perpendicular (normal)
+        Vector3 sideAB = pointB - pointA;
+        Vector3 sideAC = pointC - pointA;
+
+        return Vector3.Cross(sideAB, sideAC).normalized;
+    }
     public Mesh CreateMesh() {
         Mesh mesh = new Mesh();
         mesh.vertices = this.vertices;
         mesh.triangles = this.triangles;
         mesh.uv = this.uvs;
-        mesh.RecalculateNormals();
+        mesh.normals = CalculateNormals();
 
         return mesh;
     }
