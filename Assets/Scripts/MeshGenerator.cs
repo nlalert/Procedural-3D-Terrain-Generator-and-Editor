@@ -65,6 +65,8 @@ public static class MeshGenerator {
                 }
             } 
         }
+
+        meshData.BakedNormals();
         
         return meshData;
     }
@@ -74,6 +76,7 @@ public class MeshData {
     Vector3[] vertices;
     int[] triangles;//all vertices for drawing triangle
     Vector2[] uvs;
+    Vector3[] bakedNormals;
     
     Vector3[] borderVertices;//vertices that won't be include in mesh
     int[] borderTriangles;
@@ -173,12 +176,22 @@ public class MeshData {
 
         return Vector3.Cross(sideAB, sideAC).normalized;
     }
+
+    void FlatShading(){
+        Vector3[] flatShadedVertices = new Vector3[triangles.Length];
+    }
+
+    public void BakedNormals(){
+        bakedNormals = CalculateNormals();
+    }
+
+    //for calling from MAIN GAME Thread
     public Mesh CreateMesh() {
         Mesh mesh = new Mesh();
         mesh.vertices = this.vertices;
         mesh.triangles = this.triangles;
         mesh.uv = this.uvs;
-        mesh.normals = CalculateNormals();
+        mesh.normals = bakedNormals;
 
         return mesh;
     }
