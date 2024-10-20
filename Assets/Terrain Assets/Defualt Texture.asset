@@ -12,4 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f148c40d39acacc4381c4dc8b1cfa4bd, type: 3}
   m_Name: Defualt Texture
   m_EditorClassIdentifier: 
-  autoUpdate: 0
+  autoUpdate: 1
+  baseColors:
+  - {r: 1, g: 0, b: 0, a: 0}
+  - {r: 0, g: 0.04353285, b: 1, a: 0}
+  - {r: 0, g: 0.04353285, b: 1, a: 0}
+  baseStartHeights:
+  - 0
+  - 0.1
+  - 0.277

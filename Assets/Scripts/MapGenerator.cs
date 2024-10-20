@@ -145,8 +145,8 @@ public class MapGenerator : MonoBehaviour {
             noiseData.OnValuesUpdated += OnValuesUpdated;
         }
         if(textureData != null){
-            noiseData.OnValuesUpdated -= OnTextureValuesUpdated;
-            noiseData.OnValuesUpdated += OnTextureValuesUpdated;
+            textureData.OnValuesUpdated -= OnTextureValuesUpdated;
+            textureData.OnValuesUpdated += OnTextureValuesUpdated;
         }
     }
 
