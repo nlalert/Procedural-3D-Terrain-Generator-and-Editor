@@ -94,7 +94,7 @@ public class CameraController : MonoBehaviour
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            if (Physics.Raycast(ray, out hit))
+            if (Physics.Raycast(ray, out hit, 1500.0f))
             {
                 if (hit.collider.CompareTag("Terrain")) // Make sure the hit object is terrain
                 {
