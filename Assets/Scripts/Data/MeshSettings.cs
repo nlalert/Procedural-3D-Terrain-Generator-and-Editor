@@ -10,6 +10,9 @@ public class MeshSettings : UpdatableData
     public const int numSupportedFlatshadedChunkSizes = 3;
     public static readonly int[] supportedChunkSizes = {48, 72, 96, 120, 144, 168, 192, 216, 240};
 
+
+    [Range (0,2)]
+    public int mapAreaLevel = 1;
     public float meshScale = 2f;//map size scale (x,y,z)
     public bool useFlatShading;
 

@@ -16,13 +16,18 @@ public class CameraController : MonoBehaviour
     // Custom cursors
     public Texture2D rotateCursor;
     public Texture2D terrainCursorTexture;
-
+    private Vector2 terrainBoundsX; // X-axis boundaries (minX, maxX)
+    private Vector2 terrainBoundsZ; // Z-axis boundaries (minZ, maxZ)
     private Vector2 cursorHotspot = Vector2.zero; // Hotspot for the cursor
+    public MeshSettings meshSettings;
 
     private bool terrainFound = false;  // To track if the cursor is on the terrain
 
     void Start()
     {
+        float boundary = (meshSettings.mapAreaLevel + 0.5f) * meshSettings.meshWorldSize;
+        terrainBoundsX = new Vector2(-boundary, boundary);
+        terrainBoundsZ = new Vector2(-boundary, boundary);
         // Set the initial Y elevation when the scene starts
         fixedY = transform.position.y;
 
@@ -84,6 +89,9 @@ public class CameraController : MonoBehaviour
             Vector3 newPosition = transform.position;
             newPosition.y = fixedY;
             transform.position = newPosition;
+
+            // Clamp position within terrain bounds
+            ClampCameraPosition();
         }
     }
 
@@ -104,48 +112,38 @@ public class CameraController : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log("Hit object but not terrain: " + hit.collider.name);
                     rotatingAroundPoint = false;
                 }
             }
             else
             {
-                Debug.Log("Raycast did not hit any object.");
                 rotatingAroundPoint = false;
             }
         }
 
         if (Input.GetMouseButton(1)) // Holding right mouse button
         {
-            // Change to rotating cursor
             Cursor.SetCursor(rotateCursor, cursorHotspot, CursorMode.Auto);
 
             Vector3 delta = Input.mousePosition - lastMousePosition;
             float rotX = delta.y * rotationSpeed * Time.deltaTime;
             float rotY = delta.x * rotationSpeed * Time.deltaTime;
 
-            rotX = Mathf.Lerp(0, rotX, 0.1f); // Smoothing
-            rotY = Mathf.Lerp(0, rotY, 0.1f);
-
             if (rotatingAroundPoint)
             {
                 transform.RotateAround(rotationPoint, Vector3.up, rotY);
                 transform.RotateAround(rotationPoint, transform.right, rotX);
-            }
-            else
-            {
-                Debug.Log("No point found");
-                // Vector3 currentEulerAngles = transform.eulerAngles;
-                // currentEulerAngles += new Vector3(rotX, rotY, 0);
-                // transform.eulerAngles = currentEulerAngles;
+
+                // After rotation, clamp the position
+                ClampCameraPosition();
             }
         }
         else
         {
-            // Reset cursor when not rotating
             Cursor.SetCursor(null, cursorHotspot, CursorMode.Auto);
         }
     }
+
 
     void HandleZooming()
     {
@@ -155,6 +153,9 @@ public class CameraController : MonoBehaviour
         transform.Translate(move, Space.World);
 
         fixedY = transform.position.y;
+
+        // Clamp position within terrain bounds
+        ClampCameraPosition();
     }
 
     void HandleWASDMovement()
@@ -168,6 +169,25 @@ public class CameraController : MonoBehaviour
         Vector3 newPosition = transform.position;
         newPosition.y = fixedY;
         transform.position = newPosition;
+
+        // Clamp position within terrain bounds
+        ClampCameraPosition();
+    }
+
+
+    void ClampCameraPosition()
+    {
+        Vector3 pos = transform.position;
+
+        // Clamp X and Z within terrain bounds
+        pos.x = Mathf.Clamp(pos.x, terrainBoundsX.x, terrainBoundsX.y);
+        pos.z = Mathf.Clamp(pos.z, terrainBoundsZ.x, terrainBoundsZ.y);
+
+        // Optionally, if you want to prevent zooming below the terrain level
+        // pos.y = Mathf.Clamp(pos.y, minY, maxY);
+
+        // Apply the clamped position back to the camera
+        transform.position = pos;
     }
 
     void LateUpdate()

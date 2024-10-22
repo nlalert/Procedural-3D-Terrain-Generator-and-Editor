@@ -9,8 +9,6 @@ public class TerrainGenerator : MonoBehaviour
     const float viewerMoveThresholdForChunkUpdate = 25f;
     const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate;
 
-    [Range (0,2)]
-    public int mapAreaLevel = 1;
     public int colliderLODIndex;
     public LODInfo[] detailLevels;
 
@@ -75,7 +73,7 @@ public class TerrainGenerator : MonoBehaviour
                 Vector2 viewChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
 
                 // Ensure chunk coordinates are within the specified map bounds
-                if (viewChunkCoord.x >= -mapAreaLevel && viewChunkCoord.x <= mapAreaLevel && viewChunkCoord.y >= -mapAreaLevel && viewChunkCoord.y <= mapAreaLevel) {
+                if (viewChunkCoord.x >= -meshSettings.mapAreaLevel && viewChunkCoord.x <= meshSettings.mapAreaLevel && viewChunkCoord.y >= -meshSettings.mapAreaLevel && viewChunkCoord.y <= meshSettings.mapAreaLevel) {
                     
                     // If this chunk hasn't been updated in this frame yet
                     if (!alreadyUpdatedChunkCoords.Contains(viewChunkCoord)) {
