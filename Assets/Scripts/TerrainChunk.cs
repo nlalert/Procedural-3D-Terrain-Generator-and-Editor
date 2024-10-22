@@ -50,6 +50,10 @@ public class TerrainChunk {
 
         meshObject.transform.position = new Vector3(position.x, 0, position.y);
         meshObject.transform.parent = parent;
+
+        // Assign the "Terrain" tag to the mesh object
+        meshObject.tag = "Terrain";
+
         SetVisible(false);
         
         lodMeshes = new LODMesh[detailLevels.Length];
