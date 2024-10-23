@@ -21,8 +21,6 @@ public class TerrainDeformer : MonoBehaviour
         {
             HandleTerrainDeformation();
         }
-
-
     }
 
     void HandleTerrainDeformation()
@@ -109,6 +107,9 @@ public class TerrainDeformer : MonoBehaviour
         Mesh mesh = terrainChunk.meshFilter.mesh;
         Vector3[] vertices = mesh.vertices;
 
+        // List to store affected vertex indices
+        HashSet<int> affectedVertexIndices = new HashSet<int>();
+
         // Convert hit point to local space of the chunk
         Vector3 localHitPoint = hitPoint - terrainChunk.meshObject.transform.position;
 
@@ -122,16 +123,53 @@ public class TerrainDeformer : MonoBehaviour
             {
                 // Modify vertex height (increase gradually)
                 vertices[i].y += deformSpeed * Time.deltaTime;
+                affectedVertexIndices.Add(i);  // Track affected vertex
             }
         }
 
         // Update the mesh with the new vertices
         mesh.vertices = vertices;
-        mesh.RecalculateNormals();
-        terrainChunk.meshFilter.mesh = mesh;
+
+        // Recalculate normals only for affected vertices
+        RecalculateNormalsForAffectedVertices(mesh, affectedVertexIndices);
 
         // If using a mesh collider, update it as well
         terrainChunk.meshCollider.sharedMesh = mesh;
+    }
+
+    void RecalculateNormalsForAffectedVertices(Mesh mesh, HashSet<int> affectedVertexIndices)
+    {
+        Vector3[] normals = mesh.normals;
+        int[] triangles = mesh.triangles;
+        Vector3[] vertices = mesh.vertices;
+
+        // Iterate over triangles and recalculate normals only for affected vertices
+        for (int i = 0; i < triangles.Length; i += 3)
+        {
+            int v0 = triangles[i];
+            int v1 = triangles[i + 1];
+            int v2 = triangles[i + 2];
+
+            // Only recalculate the normal if at least one vertex in the triangle is affected
+            if (affectedVertexIndices.Contains(v0) || affectedVertexIndices.Contains(v1) || affectedVertexIndices.Contains(v2))
+            {
+                Vector3 normal = CalculateNormal(vertices[v0], vertices[v1], vertices[v2]);
+
+                normals[v0] = normal;
+                normals[v1] = normal;
+                normals[v2] = normal;
+            }
+        }
+
+        // Update mesh normals
+        mesh.normals = normals;
+    }
+
+    Vector3 CalculateNormal(Vector3 v0, Vector3 v1, Vector3 v2)
+    {
+        Vector3 edge1 = v1 - v0;
+        Vector3 edge2 = v2 - v0;
+        return Vector3.Cross(edge1, edge2).normalized;
     }
 
     void SmoothVertices(List<TerrainChunk> terrainChunks, Vector3 hitPoint)
@@ -176,6 +214,8 @@ public class TerrainDeformer : MonoBehaviour
             Mesh mesh = chunk.meshFilter.mesh;
             Vector3[] vertices = mesh.vertices;
 
+            HashSet<int> affectedVertexIndices = new HashSet<int>();
+
             for (int i = 0; i < vertices.Length; i++)
             {
                 Vector3 vertexWorldPos = chunk.meshObject.transform.TransformPoint(vertices[i]);
@@ -185,13 +225,15 @@ public class TerrainDeformer : MonoBehaviour
                 {
                     // Smooth the vertex height by moving it towards the average height
                     vertices[i].y = Mathf.Lerp(vertices[i].y, averageHeight, smoothingSpeed * Time.deltaTime);
+                    affectedVertexIndices.Add(i);  // Track affected vertex
                 }
             }
 
             // Update the mesh with the new vertices
             mesh.vertices = vertices;
-            mesh.RecalculateNormals();
-            chunk.meshFilter.mesh = mesh;
+
+            // Recalculate normals only for affected vertices
+            RecalculateNormalsForAffectedVertices(mesh, affectedVertexIndices);
 
             // If using a mesh collider, update it as well
             chunk.meshCollider.sharedMesh = mesh;
