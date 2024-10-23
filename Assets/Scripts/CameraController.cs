@@ -6,6 +6,8 @@ public class CameraController : MonoBehaviour
     public float rotationSpeed = 100f;  // Speed of rotation with right mouse
     public float zoomSpeed = 10f;       // Speed of zooming (scroll wheel)
     public float moveSpeed = 20f;       // Speed of WASD movement
+    public float minPitch = 10f;  // Minimum pitch angle (looking down)
+    public float maxPitch = 80f;  // Maximum pitch angle (eye level)
 
     private Vector3 lastMousePosition;  // To track mouse movement
     private bool rotatingAroundPoint = false;
@@ -22,6 +24,8 @@ public class CameraController : MonoBehaviour
     public MeshSettings meshSettings;
 
     private bool terrainFound = false;  // To track if the cursor is on the terrain
+    public float minY = 0f;  // Minimum height (ground level)
+    public float maxY = 220f;  // Maximun height
 
     void Start()
     {
@@ -131,8 +135,21 @@ public class CameraController : MonoBehaviour
 
             if (rotatingAroundPoint)
             {
+                // Apply Yaw (horizontal rotation)
                 transform.RotateAround(rotationPoint, Vector3.up, rotY);
+
+                // Apply Pitch (vertical rotation)
+                Vector3 originalRotation = transform.eulerAngles;
                 transform.RotateAround(rotationPoint, transform.right, rotX);
+
+                // Clamp the pitch (rotation around X-axis)
+                float currentPitch = transform.eulerAngles.x;
+                // Clamp between minPitch and maxPitch, using Mathf.Clamp
+                if (currentPitch > 180) currentPitch -= 360;  // Ensure the angle is in range [-180, 180]
+                currentPitch = Mathf.Clamp(currentPitch, minPitch, maxPitch);
+
+                // Apply the clamped pitch back to the camera
+                transform.eulerAngles = new Vector3(currentPitch, transform.eulerAngles.y, 0);
 
                 // After rotation, clamp the position
                 ClampCameraPosition();
@@ -183,8 +200,8 @@ public class CameraController : MonoBehaviour
         pos.x = Mathf.Clamp(pos.x, terrainBoundsX.x, terrainBoundsX.y);
         pos.z = Mathf.Clamp(pos.z, terrainBoundsZ.x, terrainBoundsZ.y);
 
-        // Optionally, if you want to prevent zooming below the terrain level
-        // pos.y = Mathf.Clamp(pos.y, minY, maxY);
+        // Clamp Y to not go below the minimum height (ground level)
+        pos.y = Mathf.Clamp(pos.y, minY, maxY);
 
         // Apply the clamped position back to the camera
         transform.position = pos;
