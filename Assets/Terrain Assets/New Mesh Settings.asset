@@ -15,6 +15,6 @@ MonoBehaviour:
   autoUpdate: 1
   mapAreaLevel: 1
   meshScale: 1.5
-  useFlatShading: 1
-  chunkSizeIndex: 8
-  flatshadedChunkSizeIndex: 2
+  useFlatShading: 0
+  chunkSizeIndex: 1
+  flatshadedChunkSizeIndex: 1

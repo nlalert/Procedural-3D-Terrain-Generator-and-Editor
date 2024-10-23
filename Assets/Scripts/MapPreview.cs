@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 public class MapPreview : MonoBehaviour
@@ -57,7 +59,9 @@ public class MapPreview : MonoBehaviour
     
     void OnValuesUpdated(){
         if (!Application.isPlaying) { // In Editor Mode
+            #if UNITY_EDITOR
             EditorApplication.delayCall += () => DrawMapInEditor(); // Postpone execution
+            #endif
         }
     }
 
