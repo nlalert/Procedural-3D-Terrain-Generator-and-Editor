@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.PlayerLoop;
 
 public class TerrainGenerator : MonoBehaviour
 {
@@ -25,6 +23,10 @@ public class TerrainGenerator : MonoBehaviour
     float meshWorldSize;
     int chunksVisibleInViewDst;
 
+    public GameObject waterPlanePrefab; // Assign a water plane prefab in the inspector
+
+    private GameObject waterPlane; // The water plane instance
+
     public Dictionary<Vector2, TerrainChunk> terrainChunkDictionary = new Dictionary<Vector2, TerrainChunk>();
     List<TerrainChunk> visibleTerrainChunks = new List<TerrainChunk>();
     void Start() {
@@ -34,6 +36,9 @@ public class TerrainGenerator : MonoBehaviour
         float maxViewDst = detailLevels[detailLevels.Length-1].visibleDstThreshold;
         meshWorldSize = meshSettings.meshWorldSize;
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst/meshWorldSize);
+        
+        // Create the water plane
+        CreateWaterPlane();
 
         UpdateVisibleChunks();
     }
@@ -99,5 +104,20 @@ public class TerrainGenerator : MonoBehaviour
         else{
             visibleTerrainChunks.Remove(chunk);
         }
+    }
+
+     // Function to create the water plane
+    void CreateWaterPlane() {
+        // Instantiate water plane prefab
+        waterPlane = Instantiate(waterPlanePrefab, Vector3.zero, Quaternion.identity);
+
+        // Calculate the total size of the terrain based on mapAreaLevel
+        float terrainSize = (meshSettings.mapAreaLevel + 0.5f) * meshSettings.meshWorldSize * 2;
+
+        // Set the water plane size to cover the whole terrain
+        waterPlane.transform.localScale = new Vector3(terrainSize / 10f, 1, terrainSize / 10f); // Assuming the default plane is 10x10 units
+
+        // Position the water plane at y=0 and center it
+        waterPlane.transform.position = new Vector3(0, textureSettings.layers[1].startHeight * heightMapSettings.heightMultiplier, 0);
     }
 }
