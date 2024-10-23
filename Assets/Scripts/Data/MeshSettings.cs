@@ -2,36 +2,54 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Create an instance of this scriptable object from Unity's asset menu
 [CreateAssetMenu()]
-public class MeshSettings : UpdatableData
+public class MeshSettings : UpdatableData // Inherits from UpdatableData class
 {
+    // Constants for defining supported levels of detail (LODs) and chunk sizes
     public const int numSupportedLODS = 5;
     public const int numSupportedChunkSizes = 9;
     public const int numSupportedFlatshadedChunkSizes = 3;
+
+    // Array of supported chunk sizes in vertices
     public static readonly int[] supportedChunkSizes = {48, 72, 96, 120, 144, 168, 192, 216, 240};
 
-
-    [Range (0,2)]
+    // Slider range for selecting map area level
+    [Range(0, 2)]
     public int mapAreaLevel = 1;
-    public float meshScale = 2f;//map size scale (x,y,z)
+
+    // Controls the scale of the mesh (affects world size)
+    public float meshScale = 2f; // Map size scale (x, y, z)
+
+    // Boolean to toggle flat shading mode
     public bool useFlatShading;
 
-    [Range(0, numSupportedChunkSizes-1)]
-    public int chunkSizeIndex; 
-    [Range(0, numSupportedFlatshadedChunkSizes-1)]
+    // Dropdown for selecting the chunk size index for the mesh (standard or flat-shaded)
+    [Range(0, numSupportedChunkSizes - 1)]
+    public int chunkSizeIndex;
+
+    // Dropdown for selecting the chunk size index when using flat shading
+    [Range(0, numSupportedFlatshadedChunkSizes - 1)]
     public int flatshadedChunkSizeIndex;
 
-    //num vertices per line of mesh rendered at LOD = 0. Includes the 2 extra vertices tat are excluded from final mesh, but used for calculating normals
-    public  int numVertsPerLine{
-        get{
+    // Property to calculate the number of vertices per line in the mesh at the highest level of detail (LOD = 0)
+    // Includes two extra vertices used for normal calculation but excluded from the final mesh
+    public int numVertsPerLine
+    {
+        get
+        {
+            // Depending on whether flat shading is used, get the chunk size plus 1 for the extra vertices
             return supportedChunkSizes[useFlatShading ? flatshadedChunkSizeIndex : chunkSizeIndex] + 1;
         }
     }
 
-    public float meshWorldSize{
-        get{
-            //minus 1 then 2 from border
+    // Property to calculate the world size of the mesh
+    public float meshWorldSize
+    {
+        get
+        {
+            // Subtract 3 vertices (1 for the extra vertex at each end and 2 from the border) and scale the mesh size
             return (numVertsPerLine - 3) * meshScale;
         }
     }
-}   
+}

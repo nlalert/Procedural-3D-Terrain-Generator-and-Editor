@@ -3,74 +3,76 @@ using System.Collections.Generic;
 
 public class TerrainDeformer : MonoBehaviour
 {
-    public float deformRadius = 10f;   // Radius of deformation
-    public float deformSpeed = 5f;     // Speed of height increase
-    public float smoothingSpeed = 2f;  // Speed of terrain smoothing
+    public float deformRadius = 10f;   // Radius within which the terrain will be deformed or smoothed
+    public float deformSpeed = 5f;     // Speed at which terrain vertices are raised during deformation
+    public float smoothingSpeed = 2f;  // Speed at which terrain vertices are smoothed
 
-    public TerrainGenerator terrainGenerator;  // Reference to the terrain generator
+    public TerrainGenerator terrainGenerator;  // Reference to the terrain generator that holds the chunks
 
     void Update()
     {
-        // Check if the right mouse button is held for smoothing
+        // Check if the right mouse button is held and the Left Control key is pressed for smoothing
         if (Input.GetMouseButton(0) && Input.GetKey(KeyCode.LeftControl))
         {
-            HandleTerrainSmoothing();
+            HandleTerrainSmoothing(); // Call the smoothing function
         }
-        // Check if the left mouse button is held for deformation
+        // Check if the left mouse button is held for terrain deformation
         else if (Input.GetMouseButton(0))
         {
-            HandleTerrainDeformation();
+            HandleTerrainDeformation(); // Call the deformation function
         }
     }
 
+    // Handle terrain deformation based on raycasting from the mouse position
     void HandleTerrainDeformation()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        // Perform a raycast to detect the terrain
+        // Perform a raycast to detect the terrain where the mouse is pointing
         if (Physics.Raycast(ray, out hit))
         {
             if (hit.collider.CompareTag("Terrain"))
             {
-                // Modify terrain chunks in the deformation radius
+                // Modify terrain chunks in the deformation radius around the hit point
                 ModifySurroundingChunks(hit.point, isSmoothing: false);
             }
         }
     }
 
+    // Handle terrain smoothing based on raycasting from the mouse position
     void HandleTerrainSmoothing()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        // Perform a raycast to detect the terrain
+        // Perform a raycast to detect the terrain where the mouse is pointing
         if (Physics.Raycast(ray, out hit))
         {
             if (hit.collider.CompareTag("Terrain"))
             {
-                // Smooth terrain chunks in the radius
+                // Smooth terrain chunks in the smoothing radius around the hit point
                 ModifySurroundingChunks(hit.point, isSmoothing: true);
             }
         }
     }
 
-    // Find all chunks in the deformation or smoothing radius
+    // Modify the vertices of chunks in the surrounding area based on the hit point
     void ModifySurroundingChunks(Vector3 hitPoint, bool isSmoothing)
     {
-        // Find the chunk the user clicked on
+        // Determine the chunk the user clicked on based on the hit point
         Vector2 chunkCoord = new Vector2(Mathf.Floor(hitPoint.x / terrainGenerator.meshSettings.meshWorldSize),
                                          Mathf.Floor(hitPoint.z / terrainGenerator.meshSettings.meshWorldSize));
 
         List<TerrainChunk> chunksToModify = new List<TerrainChunk>();
 
-        // Add the main chunk
+        // Add the main chunk where the hit point is located
         if (terrainGenerator.terrainChunkDictionary.TryGetValue(chunkCoord, out TerrainChunk mainChunk))
         {
             chunksToModify.Add(mainChunk);
         }
 
-        // Check neighboring chunks in all directions
+        // Check neighboring chunks in all 8 directions (left, right, back, front, and diagonals)
         Vector2[] neighborOffsets = {
             new Vector2(-1, 0), new Vector2(1, 0),  // Left and Right
             new Vector2(0, -1), new Vector2(0, 1),  // Back and Front
@@ -78,6 +80,7 @@ public class TerrainDeformer : MonoBehaviour
             new Vector2(-1, 1), new Vector2(1, -1)
         };
 
+        // Add neighboring chunks to the list of chunks to modify
         foreach (Vector2 offset in neighborOffsets)
         {
             Vector2 neighborCoord = chunkCoord + offset;
@@ -92,28 +95,29 @@ public class TerrainDeformer : MonoBehaviour
         {
             if (isSmoothing)
             {
-                SmoothVertices(chunksToModify, hitPoint);  // Send all chunks for cross-chunk smoothing
+                SmoothVertices(chunksToModify, hitPoint);  // Smooth vertices across all chunks
             }
             else
             {
-                ModifyVertices(chunk, hitPoint);
+                ModifyVertices(chunk, hitPoint);  // Deform vertices in the chunk
             }
         }
     }
 
+    // Modify the vertices of a specific chunk for terrain deformation
     void ModifyVertices(TerrainChunk terrainChunk, Vector3 hitPoint)
     {
-        // Get the mesh and vertex data
+        // Get the mesh and vertex data of the chunk
         Mesh mesh = terrainChunk.meshFilter.mesh;
         Vector3[] vertices = mesh.vertices;
 
-        // List to store affected vertex indices
+        // List to store the indices of affected vertices
         HashSet<int> affectedVertexIndices = new HashSet<int>();
 
-        // Convert hit point to local space of the chunk
+        // Convert the hit point to the local space of the chunk
         Vector3 localHitPoint = hitPoint - terrainChunk.meshObject.transform.position;
 
-        // Loop through vertices to find those within the deform radius
+        // Loop through the vertices and modify those within the deform radius
         for (int i = 0; i < vertices.Length; i++)
         {
             Vector3 vertexWorldPos = terrainChunk.meshObject.transform.TransformPoint(vertices[i]);
@@ -121,60 +125,64 @@ public class TerrainDeformer : MonoBehaviour
 
             if (distance < deformRadius)
             {
-                // Modify vertex height (increase gradually)
+                // Modify the vertex height by increasing it gradually
                 vertices[i].y += deformSpeed * Time.deltaTime;
-                affectedVertexIndices.Add(i);  // Track affected vertex
+                affectedVertexIndices.Add(i);  // Track the affected vertex
             }
         }
 
-        // Update the mesh with the new vertices
+        // Update the mesh with the new vertex positions
         mesh.vertices = vertices;
 
-        // Recalculate normals only for affected vertices
+        // Recalculate normals only for the affected vertices
         RecalculateNormalsForAffectedVertices(mesh, affectedVertexIndices);
 
-        // If using a mesh collider, update it as well
+        // If using a mesh collider, update it with the modified mesh
         terrainChunk.meshCollider.sharedMesh = mesh;
     }
 
+    // Recalculate normals for affected vertices to ensure smooth shading
     void RecalculateNormalsForAffectedVertices(Mesh mesh, HashSet<int> affectedVertexIndices)
     {
         Vector3[] normals = mesh.normals;
         int[] triangles = mesh.triangles;
         Vector3[] vertices = mesh.vertices;
 
-        // Iterate over triangles and recalculate normals only for affected vertices
+        // Iterate over triangles and recalculate normals for affected vertices
         for (int i = 0; i < triangles.Length; i += 3)
         {
             int v0 = triangles[i];
             int v1 = triangles[i + 1];
             int v2 = triangles[i + 2];
 
-            // Only recalculate the normal if at least one vertex in the triangle is affected
+            // Recalculate normals if at least one vertex in the triangle is affected
             if (affectedVertexIndices.Contains(v0) || affectedVertexIndices.Contains(v1) || affectedVertexIndices.Contains(v2))
             {
                 Vector3 normal = CalculateNormal(vertices[v0], vertices[v1], vertices[v2]);
 
+                // Update normals for the affected vertices
                 normals[v0] = normal;
                 normals[v1] = normal;
                 normals[v2] = normal;
             }
         }
 
-        // Update mesh normals
+        // Update the mesh normals
         mesh.normals = normals;
     }
 
+    // Calculate the normal for a triangle formed by three vertices
     Vector3 CalculateNormal(Vector3 v0, Vector3 v1, Vector3 v2)
     {
         Vector3 edge1 = v1 - v0;
         Vector3 edge2 = v2 - v0;
-        return Vector3.Cross(edge1, edge2).normalized;
+        return Vector3.Cross(edge1, edge2).normalized;  // Return the normalized normal vector
     }
 
+    // Smooth the vertices across all affected chunks
     void SmoothVertices(List<TerrainChunk> terrainChunks, Vector3 hitPoint)
     {
-        // A list to store all vertices and their world positions within the radius
+        // List to store vertices and their world positions within the smoothing radius
         List<Vector3> verticesInRadius = new List<Vector3>();
         List<Vector3> worldPositionsInRadius = new List<Vector3>();
 
@@ -187,6 +195,7 @@ public class TerrainDeformer : MonoBehaviour
             // Convert hit point to local space of the chunk
             Vector3 localHitPoint = hitPoint - chunk.meshObject.transform.position;
 
+            // Loop through vertices and add those within the smoothing radius
             for (int i = 0; i < vertices.Length; i++)
             {
                 Vector3 vertexWorldPos = chunk.meshObject.transform.TransformPoint(vertices[i]);
@@ -200,7 +209,7 @@ public class TerrainDeformer : MonoBehaviour
             }
         }
 
-        // Calculate the average height of all vertices within the radius
+        // Calculate the average height of all vertices within the smoothing radius
         float averageHeight = 0f;
         foreach (Vector3 vertex in verticesInRadius)
         {
@@ -208,7 +217,7 @@ public class TerrainDeformer : MonoBehaviour
         }
         averageHeight /= verticesInRadius.Count;  // Get the average height
 
-        // Smooth each chunk's vertices based on the average height
+        // Smooth each chunk's vertices by adjusting them towards the average height
         foreach (TerrainChunk chunk in terrainChunks)
         {
             Mesh mesh = chunk.meshFilter.mesh;
@@ -223,19 +232,19 @@ public class TerrainDeformer : MonoBehaviour
 
                 if (distance < deformRadius)
                 {
-                    // Smooth the vertex height by moving it towards the average height
+                    // Smooth the vertex height by interpolating towards the average height
                     vertices[i].y = Mathf.Lerp(vertices[i].y, averageHeight, smoothingSpeed * Time.deltaTime);
-                    affectedVertexIndices.Add(i);  // Track affected vertex
+                    affectedVertexIndices.Add(i);  // Track the affected vertex
                 }
             }
 
-            // Update the mesh with the new vertices
+            // Update the mesh with the smoothed vertex positions
             mesh.vertices = vertices;
 
-            // Recalculate normals only for affected vertices
+            // Recalculate normals for affected vertices
             RecalculateNormalsForAffectedVertices(mesh, affectedVertexIndices);
 
-            // If using a mesh collider, update it as well
+            // If using a mesh collider, update it with the modified mesh
             chunk.meshCollider.sharedMesh = mesh;
         }
     }

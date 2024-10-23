@@ -2,47 +2,63 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[ExecuteAlways]
+[ExecuteAlways] // This attribute ensures the script runs in both edit mode and play mode
 public class LightingManager : MonoBehaviour
 {
-    [SerializeField] private Light directionalLight;
-    [SerializeField] private LightingSettings lightingSettings;
-    [SerializeField] private float timeSpeed = 5;
-    [SerializeField, Range (0, 24)] private float timeOfDay;
+    // References to the main directional light and the lighting settings
+    [SerializeField] private Light directionalLight; // The directional light in the scene (e.g., sun)
+    [SerializeField] private LightingSettings lightingSettings; // ScriptableObject containing lighting data (colors for different times of day)
+    
+    // Speed at which time progresses (when playing) and the current time of day
+    [SerializeField] private float timeSpeed = 5; // Speed modifier for simulating time progression
+    [SerializeField, Range(0, 24)] private float timeOfDay; // Time of day, clamped between 0 and 24
 
+    // Update is called once per frame
     private void Update(){
+        // If lighting settings are missing, don't proceed
         if(lightingSettings == null)
             return;
-        
+
+        // In play mode, advance the time of day based on the time speed and deltaTime
         if(Application.isPlaying){
+            // Increase time of day with deltaTime and scale by timeSpeed
             timeOfDay += Time.deltaTime / 100 * timeSpeed;
-            timeOfDay %= 24; // clamp 0-24
+            timeOfDay %= 24; // Wrap timeOfDay to stay within 0-24 range (simulating 24-hour cycle)
         }
 
+        // Update lighting based on the current time of day percentage (normalized to 0-1)
         UpdateLighting(timeOfDay / 24f);
     }
 
+    // Updates lighting settings based on time of day percentage
     private void UpdateLighting(float timePercent){
-        RenderSettings.ambientLight = lightingSettings.ambientColor.Evaluate(timePercent);
-        RenderSettings.fogColor = lightingSettings.fogColor.Evaluate(timePercent);
+        // Evaluate and set ambient light and fog color using gradient data from the lighting settings
+        RenderSettings.ambientLight = lightingSettings.ambientColor.Evaluate(timePercent); // Set ambient light based on time
+        RenderSettings.fogColor = lightingSettings.fogColor.Evaluate(timePercent); // Set fog color based on time
 
+        // If there is a directional light (e.g., the sun), update its color and rotation
         if(directionalLight != null){
-            directionalLight.color = lightingSettings.directionalColor.Evaluate(timePercent);
+            directionalLight.color = lightingSettings.directionalColor.Evaluate(timePercent); // Change sun color over time
+            // Rotate the directional light based on the time of day, simulating sun movement
             directionalLight.transform.localRotation = Quaternion.Euler(new Vector3((timePercent * 360f) - 90f, -170, 0));
         }
     }
 
+    // OnValidate is called when the script is loaded or a value is changed in the inspector
     private void OnValidate(){
+        // If a directional light is already assigned, no need to search for one
         if(directionalLight != null)
             return;
 
+        // If the RenderSettings' sun is set, assign it as the directional light
         if(RenderSettings.sun != null){
             directionalLight = RenderSettings.sun;
         }
         else{
+            // Otherwise, find all lights in the scene and assign the first directional light found
             Light[] lights = GameObject.FindObjectsOfType<Light>();
             foreach(Light light in lights){
-                if(light.type == LightType.Directional){
+                if(light.type == LightType.Directional){ // Check if the light is directional
                     directionalLight = light;
                     return;
                 }
