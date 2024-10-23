@@ -4,7 +4,7 @@ using UnityEngine;
 using System.Linq;
 
 [CreateAssetMenu()]
-public class textureData : UpdatableData
+public class TextureData : UpdatableData
 {
     const int textureSize = 512;
     const TextureFormat textureFormat = TextureFormat.RGB565;

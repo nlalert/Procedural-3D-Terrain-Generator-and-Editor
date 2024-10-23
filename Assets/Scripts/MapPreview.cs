@@ -15,7 +15,7 @@ public class MapPreview : MonoBehaviour
 
     public MeshSettings meshSettings;
     public HeightMapSettings heightMapSettings;
-    public textureData textureData;
+    public TextureData textureData;
 
     public Material terrainMaterial;
 

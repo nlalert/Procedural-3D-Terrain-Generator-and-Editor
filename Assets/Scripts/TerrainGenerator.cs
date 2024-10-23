@@ -14,7 +14,7 @@ public class TerrainGenerator : MonoBehaviour
 
     public MeshSettings meshSettings;
     public HeightMapSettings heightMapSettings;
-    public textureData textureSettings;
+    public TextureData textureSettings;
 
     public Transform viewer;
     public Material mapMaterial;
