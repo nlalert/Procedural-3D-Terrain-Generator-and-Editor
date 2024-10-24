@@ -6,7 +6,7 @@ public static class MeshGenerator {
     // Returns MeshData instead of Mesh so the mesh can be created outside of the thread.
     public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
         // Determine the mesh simplification step based on the level of detail (LOD).
-        int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2; // step sizes: 1, 2, 4, 6, 8, 10, 12
+        int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2; // step sizes: 1, 2, 4, 6, 8
         
         int borderedSize = heightMap.GetLength(0); // Size of the height map with borders
         int meshSize = borderedSize - 2 * meshSimplificationIncrement; // Size of the mesh after border removal

@@ -24,7 +24,7 @@ public static class Noise
             float offsetY = prng.Next(-100000, 100000) + settings.offset.y + sampleCenter.y;
             octaveOffsets[i] = new Vector2(offsetX, offsetY);
 
-            maxPossibleHeight += amplitude;   // Accumulate the max possible height for normalization
+            maxPossibleHeight += amplitude;   // Accumulate the max possible height for normalization (1 * amplitude)
             amplitude *= settings.persistance;   // Decrease amplitude for each octave
         }
         
@@ -100,6 +100,7 @@ public class NoiseSettings {
     public int octaves = 6;   // Number of octaves (layers of noise)
     [Range(0, 1)]
     public float persistance = 0.6f;   // Controls amplitude decrease for each octave
+    [Range(1, 15)]
     public float lacunarity = 2;   // Controls frequency increase for each octave
 
     public int seed;   // Seed for random generation of noise
