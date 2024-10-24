@@ -38,7 +38,7 @@ public class TerrainGenerator : MonoBehaviour
                 Vector2 chunkCoord = new Vector2(x, y);
 
                 // Create a new terrain chunk at the specified coordinates
-                TerrainChunk newChunk = new TerrainChunk(chunkCoord, heightMapSettings, meshSettings, transform, viewer, mapMaterial);
+                TerrainChunk newChunk = new TerrainChunk(chunkCoord, heightMapSettings, meshSettings, transform, mapMaterial);
                 terrainChunkDictionary.Add(chunkCoord, newChunk);
                 newChunk.Load(); // Load the terrain chunk data
             }

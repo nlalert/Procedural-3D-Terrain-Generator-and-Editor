@@ -12,8 +12,8 @@ public class MeshSettings : UpdatableData // Inherits from UpdatableData class
     // public int chunkSizeIndex;
     // public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
 
-    [Range(40, 250)]
-    public int chunkSize = 40;
+    [Range(48, 144)]
+    public int chunkSize = 48;
 
     [Range(0, 2)]
     public int mapRadius = 1;
