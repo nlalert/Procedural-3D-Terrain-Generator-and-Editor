@@ -10,9 +10,7 @@ public class MapPreviewEditor : Editor
         MapPreview mapPreview = (MapPreview)target;
 
         if(DrawDefaultInspector()) {// if value value was changed
-            if(mapPreview.autoUpdate) {
-                mapPreview.DrawMapInEditor();
-            }
+            mapPreview.DrawMapInEditor();
         }
 
         if(GUILayout.Button("Generate")) {
