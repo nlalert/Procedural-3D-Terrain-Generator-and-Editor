@@ -14,7 +14,7 @@ public static class MeshGenerator {
         int verticesPerLine = meshSize; // Number of vertices per line
 
         // Initialize MeshData with the number of vertices and flat shading setting
-        MeshData meshData = new MeshData(verticesPerLine, meshSettings.useFlatShading);
+        MeshData meshData = new MeshData(verticesPerLine);
 
         // Keep track of vertex indices
         int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
@@ -66,11 +66,7 @@ public static class MeshGenerator {
         }
 
         // Perform flat shading or baked normals depending on the mesh settings
-        if (meshData.useFlatShading) {
-            meshData.FlatShading(); // Apply flat shading
-        } else {
-            meshData.BakedNormals(); // Use pre-calculated normals
-        }
+        meshData.BakedNormals(); // Use pre-calculated normals
 
         return meshData; // Return the mesh data
     }
@@ -88,12 +84,8 @@ public class MeshData {
     int triangleIndex; // Index for mesh triangles
     int borderTriangleIndex; // Index for border triangles
 
-    public bool useFlatShading; // Flag to indicate whether flat shading is used
-
     // Constructor to initialize mesh data arrays
-    public MeshData(int verticesPerLine, bool useFlatShading) {
-        this.useFlatShading = useFlatShading;
-
+    public MeshData(int verticesPerLine) {
         vertices = new Vector3[verticesPerLine * verticesPerLine]; // Main mesh vertices
         uvs = new Vector2[verticesPerLine * verticesPerLine]; // UVs for texture mapping
         triangles = new int[(verticesPerLine - 1) * (verticesPerLine - 1) * 6]; // 2 triangles per square (6 indices per square)
@@ -182,21 +174,6 @@ public class MeshData {
         return Vector3.Cross(sideAB, sideAC).normalized;
     }
 
-    // Apply flat shading by recalculating normals for each face (not shared between vertices)
-    public void FlatShading() {
-        Vector3[] flatShadedVertices = new Vector3[triangles.Length];
-        Vector2[] flatShadedUVs = new Vector2[triangles.Length];
-
-        for (int i = 0; i < triangles.Length; i++) {
-            flatShadedVertices[i] = vertices[triangles[i]]; // Copy the vertex position
-            flatShadedUVs[i] = uvs[triangles[i]]; // Copy the UV coordinates
-            triangles[i] = i; // Reset the triangle indices
-        }
-
-        vertices = flatShadedVertices; // Replace original vertices with flat shaded ones
-        uvs = flatShadedUVs; // Replace original UVs with flat shaded UVs
-    }
-
     // Perform smoothing using pre-calculated normals for baked shading
     public void BakedNormals() {
         bakedNormals = CalculateNormals();
@@ -209,11 +186,7 @@ public class MeshData {
         mesh.triangles = triangles; // Set the triangles of the mesh
         mesh.uv = uvs; // Set the UV coordinates
 
-        if (useFlatShading) {
-            mesh.RecalculateNormals(); // Calculate normals for flat shading
-        } else {
-            mesh.normals = bakedNormals; // Use pre-calculated normals for smooth shading
-        }
+        mesh.normals = bakedNormals; // Use pre-calculated normals for smooth shading
 
         return mesh; // Return the generated mesh
     }

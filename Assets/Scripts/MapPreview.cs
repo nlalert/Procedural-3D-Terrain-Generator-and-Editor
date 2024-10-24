@@ -14,7 +14,7 @@ public class MapPreview : MonoBehaviour
     public MeshRenderer meshRenderer; // Renderer for the terrain mesh
 
     // Enumeration for selecting the type of preview
-    public enum DrawMode { NoiseMap, Mesh, FalloffMap };
+    public enum DrawMode { NoiseMap, Mesh};
     public DrawMode drawMode; // Current mode of the map preview (Noise, Mesh, or Falloff)
 
     // Settings for the mesh, height map, and texture generation
@@ -42,10 +42,6 @@ public class MapPreview : MonoBehaviour
         else if (drawMode == DrawMode.Mesh) {
             DrawMesh(MeshGenerator.GenerateTerrainMesh(heightMap.values, meshSettings)); // Draw terrain mesh
         } 
-        else if (drawMode == DrawMode.FalloffMap) {
-            // Generate a falloff map and display it as a texture
-            DrawTexture(TextureGenerator.TextureFromHeightMap(new HeightMap(FalloffGenerator.GenerateFalloffMap(meshSettings.numVertsPerLine), 0, 1)));
-        }
     }
 
     // Draw the texture on the textureRenderer

@@ -8,7 +8,6 @@ public class MeshSettings : UpdatableData // Inherits from UpdatableData class
 {
     // Constants for defining supported chunk sizes
     public const int numSupportedChunkSizes = 9;
-    public const int numSupportedFlatshadedChunkSizes = 3;
 
     // Array of supported chunk sizes in vertices
     public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
@@ -20,16 +19,9 @@ public class MeshSettings : UpdatableData // Inherits from UpdatableData class
     // Controls the scale of the mesh (affects world size)
     public float meshScale = 2f; // Map size scale (x, y, z)
 
-    // Boolean to toggle flat shading mode
-    public bool useFlatShading;
-
     // Dropdown for selecting the chunk size index for the mesh (standard or flat-shaded)
     [Range(0, numSupportedChunkSizes - 1)]
     public int chunkSizeIndex;
-
-    // Dropdown for selecting the chunk size index when using flat shading
-    [Range(0, numSupportedFlatshadedChunkSizes - 1)]
-    public int flatshadedChunkSizeIndex;
 
     // Property to calculate the number of vertices per line in the mesh
     // Includes two extra vertices used for normal calculation but excluded from the final mesh
@@ -37,8 +29,8 @@ public class MeshSettings : UpdatableData // Inherits from UpdatableData class
     {
         get
         {
-            // Depending on whether flat shading is used, get the chunk size plus 1 for the extra vertices
-            return supportedChunkSizes[useFlatShading ? flatshadedChunkSizeIndex : chunkSizeIndex] + 1;
+            // get the chunk size plus 1 for the extra vertices
+            return supportedChunkSizes[chunkSizeIndex] + 1;
         }
     }
 

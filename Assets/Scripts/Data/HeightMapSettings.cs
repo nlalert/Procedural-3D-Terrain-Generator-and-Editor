@@ -8,9 +8,6 @@ public class HeightMapSettings : UpdatableData // Inherits from UpdatableData cl
 {
     // Reference to NoiseSettings, used to generate noise for the height map
     public NoiseSettings noiseSettings;
-
-    // Toggle to determine whether to use a falloff map (which can be used to flatten terrain near the edges)
-    public bool useFalloff;
     
     // Multiplier to scale the height of the terrain on the Y-axis
     public float heightMultiplier;
