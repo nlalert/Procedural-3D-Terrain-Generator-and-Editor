@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoUpdate: 1
   mapAreaLevel: 1
-  meshScale: 2
+  meshScale: 1.5
   chunkSizeIndex: 2

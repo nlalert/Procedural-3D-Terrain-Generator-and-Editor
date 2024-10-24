@@ -87,7 +87,7 @@ public class TerrainGenerator : MonoBehaviour
                 Vector2 viewChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
 
                 // Ensure chunk coordinates are within the map bounds specified by meshSettings
-                if (viewChunkCoord.x >= -meshSettings.mapAreaLevel && viewChunkCoord.x <= meshSettings.mapAreaLevel && viewChunkCoord.y >= -meshSettings.mapAreaLevel && viewChunkCoord.y <= meshSettings.mapAreaLevel) {
+                if (viewChunkCoord.x >= -meshSettings.mapRadius && viewChunkCoord.x <= meshSettings.mapRadius && viewChunkCoord.y >= -meshSettings.mapRadius && viewChunkCoord.y <= meshSettings.mapRadius) {
                     
                     // If this chunk hasn't been updated yet in the current frame
                     if (!alreadyUpdatedChunkCoords.Contains(viewChunkCoord)) {
@@ -124,7 +124,7 @@ public class TerrainGenerator : MonoBehaviour
         waterPlane = Instantiate(waterPlanePrefab, Vector3.zero, Quaternion.identity);
 
         // Calculate the total size of the terrain based on the map area level
-        float terrainSize = (meshSettings.mapAreaLevel + 0.5f) * meshSettings.meshWorldSize * 2;
+        float terrainSize = (meshSettings.mapRadius + 0.5f) * meshSettings.meshWorldSize * 2;
 
         // Set the water plane's scale to cover the entire terrain
         waterPlane.transform.localScale = new Vector3(terrainSize / 10f, 1, terrainSize / 10f); // Assuming the default plane is 10x10 units

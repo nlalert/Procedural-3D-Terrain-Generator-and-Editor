@@ -4,9 +4,6 @@ using UnityEngine;
 
 public static class Noise
 {
-    // Enum for normalization mode, either local or global
-    public enum NormalizeMode {Local, Global};
-
     // Function to generate a noise map based on the provided settings
     public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, NoiseSettings settings, Vector2 sampleCenter) {
         float[,] noiseMap = new float[mapWidth, mapHeight];   // 2D array to store noise values
@@ -70,30 +67,19 @@ public static class Noise
 
                 noiseMap[x, y] = noiseHeight;
 
-                // Global normalization: clamp the height values based on max possible height
-                if (settings.normalizeMode == NormalizeMode.Global) {
-                    float normalizedHeight = (noiseMap[x, y] + 1) / maxPossibleHeight;   // Normalize the height value
-                    noiseMap[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);   // Ensure the value stays within a valid range
-                }
+                float normalizedHeight = (noiseMap[x, y] + 1) / maxPossibleHeight;   // Normalize the height value
+                noiseMap[x, y] = Mathf.Clamp(normalizedHeight, 0, int.MaxValue);   // Ensure the value stays within a valid range
             }
         }
 
-        // Local normalization: map the noise heights between 0 and 1 based on local min/max
-        if (settings.normalizeMode == NormalizeMode.Local) {
-            for (int x = 0; x < mapWidth; x++) {
-                for (int y = 0; y < mapHeight; y++) {
-                    noiseMap[x, y] = Mathf.InverseLerp(minLocalNoiseHeight, maxLocalNoiseHeight, noiseMap[x, y]);
-                }
-            }
-        }
-
+        // NoiseMapExporter.ExportNoiseMap(noiseMap);
+        
         return noiseMap;   // Return the generated noise map
     }
 }
 
 [System.Serializable]
 public class NoiseSettings {
-    public Noise.NormalizeMode normalizeMode;    // Normalization mode (Local or Global)
     public float scale = 50;   // Scale of the noise map
 
     [Range(1, 10)]

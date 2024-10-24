@@ -35,7 +35,7 @@ public class CameraController : MonoBehaviour
     void Start()
     {
         // Calculate terrain boundaries based on mesh settings
-        float boundary = (meshSettings.mapAreaLevel + 0.5f) * meshSettings.meshWorldSize;
+        float boundary = (meshSettings.mapRadius + 0.5f) * meshSettings.meshWorldSize;
         terrainBoundsX = new Vector2(-boundary, boundary);
         terrainBoundsZ = new Vector2(-boundary, boundary);
 

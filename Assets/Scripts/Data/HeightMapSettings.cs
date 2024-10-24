@@ -13,7 +13,7 @@ public class HeightMapSettings : UpdatableData // Inherits from UpdatableData cl
     public float heightMultiplier;
 
     // AnimationCurve to control how terrain height changes (based on noise input)
-    public AnimationCurve heightCurve;
+    public AnimationCurve heightCurve = AnimationCurve.Linear(0, 0, 1, 1);
 
     // Property to get the minimum height of the terrain by evaluating the heightCurve at 0 (the lowest point)
     public float minHeight {

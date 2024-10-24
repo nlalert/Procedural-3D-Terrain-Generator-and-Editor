@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 // Create an instance of this scriptable object from Unity's asset menu
@@ -7,21 +5,21 @@ using UnityEngine;
 public class MeshSettings : UpdatableData // Inherits from UpdatableData class
 {
     // Constants for defining supported chunk sizes
-    public const int numSupportedChunkSizes = 9;
+    // public const int numSupportedChunkSizes = 9;
 
-    // Array of supported chunk sizes in vertices
-    public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
+    // // Dropdown for selecting the chunk size index for the mesh 
+    // [Range(0, numSupportedChunkSizes - 1)]
+    // public int chunkSizeIndex;
+    // public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
 
-    // Slider range for selecting map area level
+    [Range(40, 250)]
+    public int chunkSize = 40;
+
     [Range(0, 2)]
-    public int mapAreaLevel = 1;
+    public int mapRadius = 1;
 
     // Controls the scale of the mesh (affects world size)
     public float meshScale = 2f; // Map size scale (x, y, z)
-
-    // Dropdown for selecting the chunk size index for the mesh (standard or flat-shaded)
-    [Range(0, numSupportedChunkSizes - 1)]
-    public int chunkSizeIndex;
 
     // Property to calculate the number of vertices per line in the mesh
     // Includes two extra vertices used for normal calculation but excluded from the final mesh
@@ -30,7 +28,8 @@ public class MeshSettings : UpdatableData // Inherits from UpdatableData class
         get
         {
             // get the chunk size plus 1 for the extra vertices
-            return supportedChunkSizes[chunkSizeIndex] + 1;
+            // return supportedChunkSizes[chunkSizeIndex] + 1;
+            return chunkSize;
         }
     }
 
