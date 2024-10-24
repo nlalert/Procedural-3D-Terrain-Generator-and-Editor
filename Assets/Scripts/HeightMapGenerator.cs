@@ -9,6 +9,9 @@ public static class HeightMapGenerator
         // Generate a noise map using the provided noise settings and sample center
         float[,] values = Noise.GenerateNoiseMap(width, height, settings.noiseSettings, sampleCenter);
 
+        // Create a thread-safe copy of the height curve (to avoid multithreading issues)
+        AnimationCurve heightCurve_threadsafe = new AnimationCurve(settings.heightCurve.keys);
+
         // Variables to track the minimum and maximum height values
         float minValue = float.MaxValue;
         float maxValue = float.MinValue;
@@ -17,7 +20,7 @@ public static class HeightMapGenerator
         for (int i = 0; i < width; i++){
             for (int j = 0; j < height; j++){
                 // Apply height curve and multiplier to each noise value
-                values[i, j] *= values[i, j] * settings.heightMultiplier;
+                values[i, j] *= heightCurve_threadsafe.Evaluate(values[i, j]) * settings.heightMultiplier;
 
                 // Update the min and max values to track height extremes
                 if(values[i, j] > maxValue){
