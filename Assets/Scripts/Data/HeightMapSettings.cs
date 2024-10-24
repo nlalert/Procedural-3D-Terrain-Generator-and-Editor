@@ -12,20 +12,13 @@ public class HeightMapSettings : UpdatableData // Inherits from UpdatableData cl
     // Multiplier to scale the height of the terrain on the Y-axis
     public float heightMultiplier;
 
-    // AnimationCurve to control how terrain height changes (based on noise input)
-    public AnimationCurve heightCurve;
-
     // Property to get the minimum height of the terrain by evaluating the heightCurve at 0 (the lowest point)
-    public float minHeight {
-        get{
-            return heightMultiplier * heightCurve.Evaluate(0);
-        }
-    }
+    public float minHeight = 0;
 
     // Property to get the maximum height of the terrain by evaluating the heightCurve at 1 (the highest point)
     public float maxHeight {
         get{
-            return heightMultiplier * heightCurve.Evaluate(1);
+            return heightMultiplier;
         }
     }
 
