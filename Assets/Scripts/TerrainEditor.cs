@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class TerrainDeformer : MonoBehaviour
 {
-    public enum TerrainTool { None, IncreaseHeight, DecreaseHeight, Smooth, Flatten }
+    public enum TerrainTool { None, IncreaseHeight, DecreaseHeight, Smooth }
     public TerrainTool currentTool = TerrainTool.None;
 
     public float deformRadius = 10f;   // Radius within which the terrain will be deformed or smoothed
@@ -25,10 +25,6 @@ public class TerrainDeformer : MonoBehaviour
 
     public void SetSmoothTool() {
         currentTool = TerrainTool.Smooth;
-    }
-
-    public void SetFlattenTool() {
-        currentTool = TerrainTool.Flatten;
     }
 
     void Update()
