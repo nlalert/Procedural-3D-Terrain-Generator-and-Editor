@@ -14,7 +14,7 @@ public class MapPreview : MonoBehaviour
     public MeshRenderer meshRenderer; // Renderer for the terrain mesh
 
     // Enumeration for selecting the type of preview
-    public enum DrawMode {NoiseMap, Mesh, FalloffMap};
+    public enum DrawMode { NoiseMap, Mesh, FalloffMap };
     public DrawMode drawMode; // Current mode of the map preview (Noise, Mesh, or Falloff)
 
     // Settings for the mesh, height map, and texture generation
@@ -24,14 +24,10 @@ public class MapPreview : MonoBehaviour
 
     public Material terrainMaterial; // Material for applying texture and height changes to the terrain
 
-    // Editor-specific settings
-    [Range(0, MeshSettings.numSupportedLODS-1)] // Select LOD level for preview
-    public int editorPreviewLOD; // Level of detail to be used in editor preview
-
     public bool autoUpdate; // Automatically update when values are changed
 
     // Method to draw the map preview in the Unity editor
-    public void DrawMapInEditor(){
+    public void DrawMapInEditor() {
         // Apply texture settings to the terrain material
         textureSettings.ApplyToMaterial(terrainMaterial);
         textureSettings.UpdateMeshHeights(terrainMaterial, heightMapSettings.minHeight, heightMapSettings.maxHeight);
@@ -40,13 +36,13 @@ public class MapPreview : MonoBehaviour
         HeightMap heightMap = HeightMapGenerator.GenerateHeightMap(meshSettings.numVertsPerLine, meshSettings.numVertsPerLine, heightMapSettings, Vector2.zero);
 
         // Check the selected draw mode (NoiseMap, Mesh, or FalloffMap) and call the appropriate method
-        if(drawMode == DrawMode.NoiseMap){
+        if (drawMode == DrawMode.NoiseMap) {
             DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap)); // Draw noise map as a texture
-        }
-        else if(drawMode == DrawMode.Mesh){
-            DrawMesh(MeshGenerator.GenerateTerrainMesh(heightMap.values, meshSettings, editorPreviewLOD)); // Draw terrain mesh
-        }
-        else if(drawMode == DrawMode.FalloffMap){
+        } 
+        else if (drawMode == DrawMode.Mesh) {
+            DrawMesh(MeshGenerator.GenerateTerrainMesh(heightMap.values, meshSettings)); // Draw terrain mesh
+        } 
+        else if (drawMode == DrawMode.FalloffMap) {
             // Generate a falloff map and display it as a texture
             DrawTexture(TextureGenerator.TextureFromHeightMap(new HeightMap(FalloffGenerator.GenerateFalloffMap(meshSettings.numVertsPerLine), 0, 1)));
         }
@@ -76,7 +72,7 @@ public class MapPreview : MonoBehaviour
     }
 
     // Callback for when values are updated in the settings (e.g., in the editor)
-    void OnValuesUpdated(){
+    void OnValuesUpdated() {
         if (!Application.isPlaying) { // Only perform updates in the editor, not during runtime
             #if UNITY_EDITOR
             // Use Unity Editor's delay call to postpone execution, ensuring the update happens in the editor
@@ -86,29 +82,29 @@ public class MapPreview : MonoBehaviour
     }
 
     // Callback when the texture settings are updated
-    void OnTextureValuesUpdated(){
+    void OnTextureValuesUpdated() {
         // Apply any changes to the texture settings to the material
         textureSettings.ApplyToMaterial(terrainMaterial);
     }
 
     // Method called by Unity when the script is validated (when script changes or values change)
-    void OnValidate(){
+    void OnValidate() {
         // Ensure event subscriptions are handled properly to avoid multiple subscriptions
 
         // Unsubscribe and resubscribe to mesh settings update events
-        if(meshSettings != null){
+        if (meshSettings != null) {
             meshSettings.OnValuesUpdated -= OnValuesUpdated;
             meshSettings.OnValuesUpdated += OnValuesUpdated;
         }
 
         // Unsubscribe and resubscribe to height map settings update events
-        if(heightMapSettings != null){
+        if (heightMapSettings != null) {
             heightMapSettings.OnValuesUpdated -= OnValuesUpdated;
             heightMapSettings.OnValuesUpdated += OnValuesUpdated;
         }
 
         // Unsubscribe and resubscribe to texture settings update events
-        if(textureSettings != null){
+        if (textureSettings != null) {
             textureSettings.OnValuesUpdated -= OnTextureValuesUpdated;
             textureSettings.OnValuesUpdated += OnTextureValuesUpdated;
         }

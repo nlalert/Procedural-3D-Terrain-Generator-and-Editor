@@ -8,10 +8,6 @@ public class TerrainGenerator : MonoBehaviour
     const float viewerMoveThresholdForChunkUpdate = 25f;
     const float sqrViewerMoveThresholdForChunkUpdate = viewerMoveThresholdForChunkUpdate * viewerMoveThresholdForChunkUpdate; // Square of the threshold for faster comparisons
 
-    // Public fields to set LOD (Level of Detail), settings, and references
-    public int colliderLODIndex;
-    public LODInfo[] detailLevels; // Array of LOD levels
-
     public MeshSettings meshSettings;
     public HeightMapSettings heightMapSettings;
     public TextureSettings textureSettings;
@@ -40,8 +36,8 @@ public class TerrainGenerator : MonoBehaviour
         textureSettings.ApplyToMaterial(mapMaterial);
         textureSettings.UpdateMeshHeights(mapMaterial, heightMapSettings.minHeight, heightMapSettings.maxHeight);
 
-        // Calculate the maximum view distance based on the last detail level's visible distance threshold
-        float maxViewDst = detailLevels[detailLevels.Length - 1].visibleDstThreshold;
+        // Calculate the maximum view distance based on the world size
+        float maxViewDst = 2000f; // Set this to a desired view distance
         meshWorldSize = meshSettings.meshWorldSize; // Get the size of the mesh in world units
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / meshWorldSize); // Calculate the number of visible chunks
 
@@ -100,7 +96,7 @@ public class TerrainGenerator : MonoBehaviour
                             terrainChunkDictionary[viewChunkCoord].UpdateTerrainChunk();
                         } else {
                             // Create a new terrain chunk if it doesn't exist yet
-                            TerrainChunk newChunk = new TerrainChunk(viewChunkCoord, heightMapSettings, meshSettings, detailLevels, colliderLODIndex, transform, viewer, mapMaterial);
+                            TerrainChunk newChunk = new TerrainChunk(viewChunkCoord, heightMapSettings, meshSettings, transform, viewer, mapMaterial);
                             terrainChunkDictionary.Add(viewChunkCoord, newChunk);
                             newChunk.onVisibilityChanged += OnTerrainChunkVisibilityChanged; // Subscribe to visibility change events
                             newChunk.Load(); // Load the terrain chunk data

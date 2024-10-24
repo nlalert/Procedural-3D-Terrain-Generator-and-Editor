@@ -4,31 +4,26 @@ using UnityEngine;
 public static class MeshGenerator {
     // Generate a terrain mesh using a height map and mesh settings.
     // Returns MeshData instead of Mesh so the mesh can be created outside of the thread.
-    public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings, int levelOfDetail) {
-        // Determine the mesh simplification step based on the level of detail (LOD).
-        int meshSimplificationIncrement = (levelOfDetail == 0) ? 1 : levelOfDetail * 2; // step sizes: 1, 2, 4, 6, 8
-        
+    public static MeshData GenerateTerrainMesh(float[,] heightMap, MeshSettings meshSettings) {
         int borderedSize = heightMap.GetLength(0); // Size of the height map with borders
-        int meshSize = borderedSize - 2 * meshSimplificationIncrement; // Size of the mesh after border removal
-        int meshSizeUnsimplified = borderedSize - 2; // Size of the unsimplified mesh
+        int meshSize = borderedSize - 2; // Size of the mesh after border removal
 
-        float halfWidth = (meshSizeUnsimplified - 1) / 2f; // Half width of the mesh
-        float halfHeight = (meshSizeUnsimplified - 1) / 2f; // Half height of the mesh
+        float halfWidth = (meshSize - 1) / 2f; // Half width of the mesh
+        float halfHeight = (meshSize - 1) / 2f; // Half height of the mesh
 
-        int verticesPerLine = (meshSize - 1) / meshSimplificationIncrement + 1; // Number of vertices per line after simplification
+        int verticesPerLine = meshSize; // Number of vertices per line
 
         // Initialize MeshData with the number of vertices and flat shading setting
         MeshData meshData = new MeshData(verticesPerLine, meshSettings.useFlatShading);
 
         // Keep track of vertex indices
-        // Positive indices for mesh vertices, negative for border vertices
         int[,] vertexIndicesMap = new int[borderedSize, borderedSize];
         int meshVertexIndex = 0;
         int borderVertexIndex = -1;
 
         // Assign indices to vertices, distinguishing between border and mesh vertices
-        for (int x = 0; x < borderedSize; x += meshSimplificationIncrement) {
-            for (int y = 0; y < borderedSize; y += meshSimplificationIncrement) {
+        for (int x = 0; x < borderedSize; x++) {
+            for (int y = 0; y < borderedSize; y++) {
                 bool isBorderVertex = y == 0 || y == borderedSize - 1 || x == 0 || x == borderedSize - 1;
 
                 if (isBorderVertex) {
@@ -42,18 +37,18 @@ public static class MeshGenerator {
         }
 
         // Loop over each vertex and set its position
-        for (int x = 0; x < borderedSize; x += meshSimplificationIncrement) {
-            for (int y = 0; y < borderedSize; y += meshSimplificationIncrement) {
+        for (int x = 0; x < borderedSize; x++) {
+            for (int y = 0; y < borderedSize; y++) {
                 int vertexIndex = vertexIndicesMap[x, y];
 
                 // Calculate UV coordinates based on vertex position
-                Vector2 percent = new Vector2((x - meshSimplificationIncrement) / (float)meshSize, (y - meshSimplificationIncrement) / (float)meshSize);
-                
+                Vector2 percent = new Vector2((x - 1) / (float)meshSize, (y - 1) / (float)meshSize);
+
                 // Get the height from the height map
                 float height = heightMap[x, y];
-                
+
                 // Position the vertex in 3D space, centered on the mesh
-                Vector3 vertexPosition = new Vector3((percent.x * meshSizeUnsimplified - halfWidth) * meshSettings.meshScale, height, (percent.y * meshSizeUnsimplified - halfHeight) * meshSettings.meshScale);
+                Vector3 vertexPosition = new Vector3((percent.x * meshSize - halfWidth) * meshSettings.meshScale, height, (percent.y * meshSize - halfHeight) * meshSettings.meshScale);
 
                 // Add the vertex to MeshData
                 meshData.AddVertex(vertexPosition, percent, vertexIndex);
@@ -61,13 +56,13 @@ public static class MeshGenerator {
                 // Add triangles (two per square)
                 if (x < borderedSize - 1 && y < borderedSize - 1) { // Ignore right and bottom edge vertices
                     int a = vertexIndicesMap[x, y];
-                    int b = vertexIndicesMap[x + meshSimplificationIncrement, y];
-                    int c = vertexIndicesMap[x, y + meshSimplificationIncrement];
-                    int d = vertexIndicesMap[x + meshSimplificationIncrement, y + meshSimplificationIncrement];
+                    int b = vertexIndicesMap[x + 1, y];
+                    int c = vertexIndicesMap[x, y + 1];
+                    int d = vertexIndicesMap[x + 1, y + 1];
                     meshData.AddTriangle(a, c, d); // First triangle
                     meshData.AddTriangle(a, d, b); // Second triangle
                 }
-            } 
+            }
         }
 
         // Perform flat shading or baked normals depending on the mesh settings

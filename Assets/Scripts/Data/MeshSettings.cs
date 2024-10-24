@@ -6,13 +6,12 @@ using UnityEngine;
 [CreateAssetMenu()]
 public class MeshSettings : UpdatableData // Inherits from UpdatableData class
 {
-    // Constants for defining supported levels of detail (LODs) and chunk sizes
-    public const int numSupportedLODS = 5;
+    // Constants for defining supported chunk sizes
     public const int numSupportedChunkSizes = 9;
     public const int numSupportedFlatshadedChunkSizes = 3;
 
     // Array of supported chunk sizes in vertices
-    public static readonly int[] supportedChunkSizes = {48, 72, 96, 120, 144, 168, 192, 216, 240};
+    public static readonly int[] supportedChunkSizes = { 48, 72, 96, 120, 144, 168, 192, 216, 240 };
 
     // Slider range for selecting map area level
     [Range(0, 2)]
@@ -32,7 +31,7 @@ public class MeshSettings : UpdatableData // Inherits from UpdatableData class
     [Range(0, numSupportedFlatshadedChunkSizes - 1)]
     public int flatshadedChunkSizeIndex;
 
-    // Property to calculate the number of vertices per line in the mesh at the highest level of detail (LOD = 0)
+    // Property to calculate the number of vertices per line in the mesh
     // Includes two extra vertices used for normal calculation but excluded from the final mesh
     public int numVertsPerLine
     {
