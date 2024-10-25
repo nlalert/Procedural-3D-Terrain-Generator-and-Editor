@@ -163,8 +163,6 @@ public class TerrainDeformer : MonoBehaviour
         Mesh mesh = terrainChunk.meshFilter.mesh;
         Vector3[] vertices = mesh.vertices;
 
-        HashSet<int> affectedVertexIndices = new HashSet<int>();
-
         Vector3 localHitPoint = hitPoint - terrainChunk.meshObject.transform.position;
 
         for (int i = 0; i < vertices.Length; i++)
@@ -175,21 +173,20 @@ public class TerrainDeformer : MonoBehaviour
             if (distance < deformRadius)
             {
                 vertices[i].y += deformSpeed * Time.deltaTime;
-                affectedVertexIndices.Add(i);
             }
         }
 
+        // Update mesh vertices and recalculate normals for the entire mesh
         mesh.vertices = vertices;
-        RecalculateNormalsForAffectedVertices(mesh, affectedVertexIndices);
+        mesh.RecalculateNormals();  // Recalculate normals for the entire mesh
         terrainChunk.meshCollider.sharedMesh = mesh;
     }
 
+    // Modify the vertices of a specific chunk for Gaussian deformation
     void DeformChunkVerticesGaussian(TerrainChunk terrainChunk, Vector3 hitPoint)
     {
         Mesh mesh = terrainChunk.meshFilter.mesh;
         Vector3[] vertices = mesh.vertices;
-
-        HashSet<int> affectedVertexIndices = new HashSet<int>();
 
         Vector3 localHitPoint = hitPoint - terrainChunk.meshObject.transform.position;
         float sigma = deformRadius / 2f;
@@ -203,46 +200,13 @@ public class TerrainDeformer : MonoBehaviour
             {
                 float gaussianMultiplier = Mathf.Exp(-Mathf.Pow(distance, 2) / (2 * Mathf.Pow(sigma, 2)));
                 vertices[i].y += deformSpeed * gaussianMultiplier * Time.deltaTime;
-                affectedVertexIndices.Add(i);
             }
         }
 
+        // Update mesh vertices and recalculate normals for the entire mesh
         mesh.vertices = vertices;
-        RecalculateNormalsForAffectedVertices(mesh, affectedVertexIndices);
+        mesh.RecalculateNormals();  // Recalculate normals for the entire mesh
         terrainChunk.meshCollider.sharedMesh = mesh;
-    }
-
-    // Recalculate normals for affected vertices to ensure smooth shading
-    void RecalculateNormalsForAffectedVertices(Mesh mesh, HashSet<int> affectedVertexIndices)
-    {
-        Vector3[] normals = mesh.normals;
-        int[] triangles = mesh.triangles;
-        Vector3[] vertices = mesh.vertices;
-
-        for (int i = 0; i < triangles.Length; i += 3)
-        {
-            int v0 = triangles[i];
-            int v1 = triangles[i + 1];
-            int v2 = triangles[i + 2];
-
-            if (affectedVertexIndices.Contains(v0) || affectedVertexIndices.Contains(v1) || affectedVertexIndices.Contains(v2))
-            {
-                Vector3 normal = CalculateTriangleNormal(vertices[v0], vertices[v1], vertices[v2]);
-
-                normals[v0] = normal;
-                normals[v1] = normal;
-                normals[v2] = normal;
-            }
-        }
-
-        mesh.normals = normals;
-    }
-
-    Vector3 CalculateTriangleNormal(Vector3 v0, Vector3 v1, Vector3 v2)
-    {
-        Vector3 edge1 = v1 - v0;
-        Vector3 edge2 = v2 - v0;
-        return Vector3.Cross(edge1, edge2).normalized;
     }
 
     // Smooth the vertices across all affected chunks
