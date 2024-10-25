@@ -136,20 +136,22 @@ public class TerrainDeformer : MonoBehaviour
             }
         }
 
-        // Modify vertices in all the relevant chunks
-        foreach (TerrainChunk chunk in chunksToModify)
+        if (isSmoothing)
         {
-            if (isSmoothing)
+            SmoothChunkVertices(chunksToModify, hitPoint);  // Smooth vertices across all chunks
+        }
+        else{
+            // Modify vertices in all the relevant chunks
+            foreach (TerrainChunk chunk in chunksToModify)
             {
-                SmoothChunkVertices(chunksToModify, hitPoint);  // Smooth vertices across all chunks
-            }
-            else if (isGaussian)
-            {
-                DeformChunkVerticesGaussian(chunk, hitPoint);  // Apply Gaussian deformation
-            }
-            else
-            {
-                DeformChunkVertices(chunk, hitPoint);  // Apply linear deformation
+                if (isGaussian)
+                {
+                    DeformChunkVerticesGaussian(chunk, hitPoint);  // Apply Gaussian deformation
+                }
+                else
+                {
+                    DeformChunkVertices(chunk, hitPoint);  // Apply linear deformation
+                }
             }
         }
     }
