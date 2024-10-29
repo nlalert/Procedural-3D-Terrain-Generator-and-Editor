@@ -1,9 +1,13 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement; // Add this line
 
 public class TerrainSettingsUI : MonoBehaviour
 {
+    [Header("Map Previewer Reference")]
+    public MapPreview mapPreview;
+
     [Header("ScriptableObject Reference")]
     public HeightMapSettings heightMapSettings;
     public MeshSettings meshSettings;
@@ -23,6 +27,9 @@ public class TerrainSettingsUI : MonoBehaviour
     public TextMeshProUGUI meshScaleText;
 
     public TextMeshProUGUI chunkSizeText; // Text label for chunk size
+
+    // Button to change scene
+    public Button changeSceneButton; // Add a reference to the button
 
     private void Start()
     {
@@ -46,29 +53,37 @@ public class TerrainSettingsUI : MonoBehaviour
         mapRadiusSlider.onValueChanged.AddListener(OnMapRadiusChanged);
         meshScaleSlider.onValueChanged.AddListener(OnMeshScaleChanged);
 
+        // Add listener for the change scene button
+        changeSceneButton.onClick.AddListener(ChangeToTerrainEditorScene);
+
         // Update the text at the start
         UpdateChunkSizeText();
         UpdateMapRadiusText();
         UpdateMeshScaleText();
+
+        mapPreview.DrawMapInEditor();
     }
 
     // Method to update ScriptableObject values
     private void OnChunkSizeChanged(float value)
     {
-        meshSettings.chunkSize = Mathf.Clamp((int)value, (int) chunkSizeSlider.minValue,(int) chunkSizeSlider.maxValue);
+        meshSettings.chunkSize = Mathf.Clamp((int)value, (int)chunkSizeSlider.minValue, (int)chunkSizeSlider.maxValue);
         UpdateChunkSizeText();
+        mapPreview.DrawMapInEditor();
     }
 
     private void OnMapRadiusChanged(float value)
     {
-        meshSettings.mapRadius = Mathf.Clamp((int)value, (int) mapRadiusSlider.minValue, (int) mapRadiusSlider.maxValue);
+        meshSettings.mapRadius = Mathf.Clamp((int)value, (int)mapRadiusSlider.minValue, (int)mapRadiusSlider.maxValue);
         UpdateMapRadiusText();
+        mapPreview.DrawMapInEditor();
     }
 
     private void OnMeshScaleChanged(float value)
     {
         meshSettings.meshScale = Mathf.Clamp(value, meshScaleSlider.minValue, meshScaleSlider.maxValue);
         UpdateMeshScaleText();
+        mapPreview.DrawMapInEditor();
     }
 
     private void UpdateChunkSizeText()
@@ -78,11 +93,17 @@ public class TerrainSettingsUI : MonoBehaviour
 
     private void UpdateMapRadiusText()
     {
-        mapRadiusText.text = $"Map Radius: {meshSettings.mapRadius}"; // Adjust formatting as needed
+        mapRadiusText.text = $"{meshSettings.mapRadius}"; // Adjust formatting as needed
     }
 
     private void UpdateMeshScaleText()
     {
-        meshScaleText.text = $"Mesh Scale: {meshSettings.meshScale:F2}"; // Adjust formatting as needed
+        meshScaleText.text = $"{meshSettings.meshScale:F2}"; // Adjust formatting as needed
+    }
+
+    // Method to change to the TerrainEditor scene
+    private void ChangeToTerrainEditorScene()
+    {
+        SceneManager.LoadScene("TerrainEditor"); // Load the scene named "TerrainEditor"
     }
 }
