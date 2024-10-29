@@ -25,7 +25,7 @@ public class CameraController : MonoBehaviour
     public MeshSettings meshSettings;   // Reference to mesh settings for terrain boundaries
 
     private bool terrainFound = false;  // Whether the cursor is over the terrain
-    public float minY = 0f;             // Minimum camera height (ground level)
+    public float minY = 10f;             // Minimum camera height (ground level)
     public float maxY = 220f;           // Maximum camera height
 
     // To track right-click position for custom cursor display
