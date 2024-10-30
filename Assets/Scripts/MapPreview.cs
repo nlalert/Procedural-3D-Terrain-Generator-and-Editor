@@ -21,8 +21,10 @@ public class MapPreview : MonoBehaviour
     public Material terrainMaterial;
 
     public void DrawMapInEditor() {
-        // Check if the object still exists before clearing and drawing
         if (this == null) return;
+
+        // Store the current rotation
+        Quaternion currentRotation = transform.rotation;
 
         ClearGeneratedChunks();
 
@@ -35,6 +37,9 @@ public class MapPreview : MonoBehaviour
                 DrawChunk(chunkCoord);
             }
         }
+
+        // Reapply the rotation after drawing chunks
+        transform.rotation = currentRotation;
     }
 
     void ClearGeneratedChunks() {
@@ -47,15 +52,28 @@ public class MapPreview : MonoBehaviour
         }
     }
 
-    void DrawChunk(Vector2 chunkCoord) {
+    public void DrawChunk(Vector2 chunkCoord) {
         Vector2 sampleCenter = chunkCoord * meshSettings.meshWorldSize / meshSettings.meshScale;
         HeightMap heightMap = HeightMapGenerator.GenerateHeightMap(meshSettings.numVertsPerLine, meshSettings.numVertsPerLine, heightMapSettings, sampleCenter);
 
         if (drawMode == DrawMode.NoiseMap) {
             DrawTexture(TextureGenerator.TextureFromHeightMap(heightMap));
-        }
-        else if (drawMode == DrawMode.Mesh) {
-            DrawMesh(MeshGenerator.GenerateTerrainMesh(heightMap.values, meshSettings), chunkCoord);
+        } else if (drawMode == DrawMode.Mesh) {
+            GameObject chunkObject = new GameObject("Chunk Preview");
+            chunkObject.transform.SetParent(transform, false); // Set as a child with local transformations
+
+            MeshFilter chunkMeshFilter = chunkObject.AddComponent<MeshFilter>();
+            MeshRenderer chunkMeshRenderer = chunkObject.AddComponent<MeshRenderer>();
+
+            chunkMeshFilter.sharedMesh = MeshGenerator.GenerateTerrainMesh(heightMap.values, meshSettings).CreateMesh();
+            chunkMeshRenderer.sharedMaterial = terrainMaterial;
+
+            // Set the chunk's position relative to the parent, ensuring they align seamlessly
+            chunkObject.transform.localPosition = new Vector3(chunkCoord.x * meshSettings.meshWorldSize, 0, chunkCoord.y * meshSettings.meshWorldSize);
+
+            if (textureRenderer != null) {
+                textureRenderer.gameObject.SetActive(false);
+            }
         }
     }
 
@@ -65,25 +83,6 @@ public class MapPreview : MonoBehaviour
         textureRenderer.transform.localScale = new Vector3(texture.width / 10f, 1, texture.height / 10f);
         textureRenderer.gameObject.SetActive(true);
         meshFilter.gameObject.SetActive(false);
-    }
-
-    public void DrawMesh(MeshData meshData, Vector2 chunkCoord) {
-        if (terrainMaterial == null || meshSettings == null) return;  // Check if settings are valid
-
-        GameObject chunkObject = new GameObject("Chunk Preview");
-        chunkObject.transform.parent = transform;
-
-        MeshFilter chunkMeshFilter = chunkObject.AddComponent<MeshFilter>();
-        MeshRenderer chunkMeshRenderer = chunkObject.AddComponent<MeshRenderer>();
-
-        chunkMeshFilter.sharedMesh = meshData.CreateMesh();
-        chunkMeshRenderer.sharedMaterial = terrainMaterial;
-
-        chunkObject.transform.position = new Vector3(chunkCoord.x * meshSettings.meshWorldSize, 0, chunkCoord.y * meshSettings.meshWorldSize);
-
-        if (textureRenderer != null) {
-            textureRenderer.gameObject.SetActive(false);
-        }
     }
 
     void OnValuesUpdated() {
