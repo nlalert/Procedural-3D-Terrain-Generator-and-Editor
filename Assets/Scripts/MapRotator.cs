@@ -3,7 +3,7 @@ using UnityEngine;
 public class MapRotator : MonoBehaviour
 {
     [Header("Rotation Settings")]
-    public float rotationSpeed = 10f; // Speed of rotation in degrees per second
+    public float rotationSpeed = 5f; // Speed of rotation in degrees per second
 
     // Update is called once per frame
     void Update()

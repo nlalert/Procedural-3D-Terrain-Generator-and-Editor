@@ -43,17 +43,17 @@ public class TerrainSettingsUI : MonoBehaviour
         chunkSizeSlider.maxValue = 144;
         chunkSizeSlider.wholeNumbers = true;
 
-        meshScaleSlider.minValue = 1;
-        meshScaleSlider.maxValue = 5;
+        meshScaleSlider.minValue = 1.0f;
+        meshScaleSlider.maxValue = 5.0f;
 
-        noiseScaleSlider.minValue = 0.1f;
+        noiseScaleSlider.minValue = 1.0f;
         noiseScaleSlider.maxValue = 100.0f;
 
         persistanceSlider.minValue = 0.1f;
         persistanceSlider.maxValue = 1.0f;
 
         lacunaritySlider.minValue = 1.0f;
-        lacunaritySlider.maxValue = 10.0f;
+        lacunaritySlider.maxValue = 8.0f;
 
         octavesSlider.minValue = 1;
         octavesSlider.maxValue = 6;
@@ -75,6 +75,7 @@ public class TerrainSettingsUI : MonoBehaviour
         persistanceSlider.value = heightMapSettings.noiseSettings.persistance;
         lacunaritySlider.value = heightMapSettings.noiseSettings.lacunarity;
         heightMultiplierSlider.value = heightMapSettings.heightMultiplier;
+        meshScaleSlider.value = meshSettings.meshScale;
 
         // Set initial values for noiseSeed and offset
         noiseSeedInputField.text = heightMapSettings.noiseSettings.seed.ToString();
