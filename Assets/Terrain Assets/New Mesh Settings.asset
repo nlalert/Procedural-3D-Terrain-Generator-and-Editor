@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: New Mesh Settings
   m_EditorClassIdentifier: 
   autoUpdate: 1
-  chunkSize: 144
-  mapRadius: 2
-  meshScale: 8.81
+  chunkSize: 96
+  mapRadius: 1
+  meshScale: 2

@@ -1,7 +1,8 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // Add this line
+using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 public class TerrainSettingsUI : MonoBehaviour
 {
@@ -14,56 +15,98 @@ public class TerrainSettingsUI : MonoBehaviour
 
     [Header("UI Elements")]
     public Slider chunkSizeSlider;
-    public InputField mapSizeInputField; // Ensure you have this defined
-    public Slider noiseScaleSlider; // Ensure you have this defined
-    public Dropdown octavesDropdown; // Ensure you have this defined
-    public Slider persistenceSlider; // Ensure you have this defined
-    public Slider lacunaritySlider; // Ensure you have this defined
-
-    // New UI Elements for mapRadius and meshScale
-    public Slider mapRadiusSlider;
-    public TextMeshProUGUI mapRadiusText;
+    public Slider noiseScaleSlider; 
+    public TextMeshProUGUI noiseScaleText;
+    public Slider octavesSlider;
+    public TextMeshProUGUI octavesText;
+    public Slider persistanceSlider;
+    public TextMeshProUGUI persistanceText;
+    public Slider lacunaritySlider;
+    public TextMeshProUGUI lacunarityText;
+    public Slider heightMultiplierSlider;
+    public TextMeshProUGUI heightMultiplierText;
+    public TMP_Dropdown mapRadiusDropdown;
     public Slider meshScaleSlider;
     public TextMeshProUGUI meshScaleText;
+    public TextMeshProUGUI chunkSizeText;
+    public Button changeSceneButton;
 
-    public TextMeshProUGUI chunkSizeText; // Text label for chunk size
-
-    // Button to change scene
-    public Button changeSceneButton; // Add a reference to the button
+    // New UI Elements for noiseSeed and offset
+    public TMP_InputField noiseSeedInputField;
+    public TMP_InputField offsetXInputField;
+    public TMP_InputField offsetYInputField;
 
     private void Start()
     {
-        // Set slider ranges
+        // Set slider ranges and initial values
         chunkSizeSlider.minValue = 48;
         chunkSizeSlider.maxValue = 144;
+        chunkSizeSlider.wholeNumbers = true;
 
-        mapRadiusSlider.minValue = 0; // Adjust min value as needed
-        mapRadiusSlider.maxValue = 2; // Adjust max value as needed
+        meshScaleSlider.minValue = 1;
+        meshScaleSlider.maxValue = 5;
 
-        meshScaleSlider.minValue = 1; // Adjust min value as needed
-        meshScaleSlider.maxValue = 10; // Adjust max value as needed
+        noiseScaleSlider.minValue = 0.1f;
+        noiseScaleSlider.maxValue = 100.0f;
+
+        persistanceSlider.minValue = 0.1f;
+        persistanceSlider.maxValue = 1.0f;
+
+        lacunaritySlider.minValue = 1.0f;
+        lacunaritySlider.maxValue = 10.0f;
+
+        octavesSlider.minValue = 1;
+        octavesSlider.maxValue = 6;
+        octavesSlider.wholeNumbers = true;
+
+        heightMultiplierSlider.minValue = 0.1f;
+        heightMultiplierSlider.maxValue = 100.0f;
+
+        // Initialize dropdown options for map radius
+        mapRadiusDropdown.ClearOptions();
+        mapRadiusDropdown.AddOptions(new List<string> { "0", "1", "2" });
+        mapRadiusDropdown.value = (int)meshSettings.mapRadius;
+        mapRadiusDropdown.onValueChanged.AddListener(OnMapRadiusChanged);
 
         // Initialize UI with current ScriptableObject values
         chunkSizeSlider.value = meshSettings.chunkSize;
-        mapRadiusSlider.value = meshSettings.mapRadius;
-        meshScaleSlider.value = meshSettings.meshScale;
+        noiseScaleSlider.value = heightMapSettings.noiseSettings.scale;
+        octavesSlider.value = heightMapSettings.noiseSettings.octaves;
+        persistanceSlider.value = heightMapSettings.noiseSettings.persistance;
+        lacunaritySlider.value = heightMapSettings.noiseSettings.lacunarity;
+        heightMultiplierSlider.value = heightMapSettings.heightMultiplier;
+
+        // Set initial values for noiseSeed and offset
+        noiseSeedInputField.text = heightMapSettings.noiseSettings.seed.ToString();
+        offsetXInputField.text = heightMapSettings.noiseSettings.offset.x.ToString();
+        offsetYInputField.text = heightMapSettings.noiseSettings.offset.y.ToString();
 
         // Add listeners to update ScriptableObject when UI changes
         chunkSizeSlider.onValueChanged.AddListener(OnChunkSizeChanged);
-        mapRadiusSlider.onValueChanged.AddListener(OnMapRadiusChanged);
+        noiseScaleSlider.onValueChanged.AddListener(OnNoiseScaleChanged);
+        octavesSlider.onValueChanged.AddListener(OnOctavesChanged);
+        persistanceSlider.onValueChanged.AddListener(OnPersistanceChanged);
+        lacunaritySlider.onValueChanged.AddListener(OnLacunarityChanged);
+        heightMultiplierSlider.onValueChanged.AddListener(OnHeightMultiplierChanged);
         meshScaleSlider.onValueChanged.AddListener(OnMeshScaleChanged);
 
-        // Add listener for the change scene button
+        noiseSeedInputField.onEndEdit.AddListener(OnNoiseSeedChanged);
+        offsetXInputField.onEndEdit.AddListener(OnOffsetXChanged);
+        offsetYInputField.onEndEdit.AddListener(OnOffsetYChanged);
+
         changeSceneButton.onClick.AddListener(ChangeToTerrainEditorScene);
 
-        // Update the text at the start
+        // Update text fields initially
+        UpdateNoiseScaleText();
         UpdateChunkSizeText();
-        UpdateMapRadiusText();
         UpdateMeshScaleText();
+        UpdatePersistanceText();
+        UpdateLacunarityText();
+        UpdateHeightMultiplierText();
+        UpdateOctavesText();
 
         mapPreview.DrawMapInEditor();
     }
-
     // Method to update ScriptableObject values
     private void OnChunkSizeChanged(float value)
     {
@@ -72,10 +115,9 @@ public class TerrainSettingsUI : MonoBehaviour
         mapPreview.DrawMapInEditor();
     }
 
-    private void OnMapRadiusChanged(float value)
+    private void OnMapRadiusChanged(int value)
     {
-        meshSettings.mapRadius = Mathf.Clamp((int)value, (int)mapRadiusSlider.minValue, (int)mapRadiusSlider.maxValue);
-        UpdateMapRadiusText();
+        meshSettings.mapRadius = value; // Update mapRadius based on dropdown selection
         mapPreview.DrawMapInEditor();
     }
 
@@ -86,24 +128,77 @@ public class TerrainSettingsUI : MonoBehaviour
         mapPreview.DrawMapInEditor();
     }
 
-    private void UpdateChunkSizeText()
+    private void OnNoiseScaleChanged(float value)
     {
-        chunkSizeText.text = $"{meshSettings.chunkSize}"; // Adjust formatting as needed
+        heightMapSettings.noiseSettings.scale = Mathf.Clamp(value, noiseScaleSlider.minValue, noiseScaleSlider.maxValue);
+        UpdateNoiseScaleText();
+        mapPreview.DrawMapInEditor();
     }
 
-    private void UpdateMapRadiusText()
+    private void OnPersistanceChanged(float value)
     {
-        mapRadiusText.text = $"{meshSettings.mapRadius}"; // Adjust formatting as needed
+        heightMapSettings.noiseSettings.persistance = Mathf.Clamp(value, persistanceSlider.minValue, persistanceSlider.maxValue);
+        UpdatePersistanceText();
+        mapPreview.DrawMapInEditor();
     }
 
-    private void UpdateMeshScaleText()
+    private void OnLacunarityChanged(float value)
     {
-        meshScaleText.text = $"{meshSettings.meshScale:F2}"; // Adjust formatting as needed
+        heightMapSettings.noiseSettings.lacunarity = Mathf.Clamp(value, lacunaritySlider.minValue, lacunaritySlider.maxValue);
+        UpdateLacunarityText();
+        mapPreview.DrawMapInEditor();
     }
+
+    private void OnHeightMultiplierChanged(float value)
+    {
+        heightMapSettings.heightMultiplier = Mathf.Clamp(value, heightMultiplierSlider.minValue, heightMultiplierSlider.maxValue);
+        UpdateHeightMultiplierText();
+        mapPreview.DrawMapInEditor();
+    }
+
+    private void OnOctavesChanged(float value)
+    {
+        heightMapSettings.noiseSettings.octaves = Mathf.Clamp((int)value, (int)octavesSlider.minValue, (int)octavesSlider.maxValue);
+        UpdateOctavesText();
+        mapPreview.DrawMapInEditor();
+    }
+
+    private void OnNoiseSeedChanged(string value)
+    {
+        if (int.TryParse(value, out int seed))
+        {
+            heightMapSettings.noiseSettings.seed = seed;
+            mapPreview.DrawMapInEditor();
+        }
+    }
+
+    private void OnOffsetXChanged(string value)
+    {
+        if (float.TryParse(value, out float offsetX))
+        {
+            heightMapSettings.noiseSettings.offset.x = offsetX;
+            mapPreview.DrawMapInEditor();
+        }
+    }
+
+    private void OnOffsetYChanged(string value)
+    {
+        if (float.TryParse(value, out float offsetY))
+        {
+            heightMapSettings.noiseSettings.offset.y = offsetY;
+            mapPreview.DrawMapInEditor();
+        }
+    }
+
+    // Methods to update text fields
+    private void UpdateChunkSizeText() => chunkSizeText.text = $"{meshSettings.chunkSize}";
+    private void UpdateMeshScaleText() => meshScaleText.text = $"{meshSettings.meshScale:F2}";
+    private void UpdatePersistanceText() => persistanceText.text = $"{heightMapSettings.noiseSettings.persistance:F2}";
+    private void UpdateLacunarityText() => lacunarityText.text = $"{heightMapSettings.noiseSettings.lacunarity:F2}";
+    private void UpdateHeightMultiplierText() => heightMultiplierText.text = $"{heightMapSettings.heightMultiplier:F2}";
+    private void UpdateOctavesText() => octavesText.text = $"{heightMapSettings.noiseSettings.octaves}"; // Update text for octaves
+    private void UpdateNoiseScaleText() => noiseScaleText.text = $"{heightMapSettings.noiseSettings.scale}"; // Update text for octaves
 
     // Method to change to the TerrainEditor scene
-    private void ChangeToTerrainEditorScene()
-    {
-        SceneManager.LoadScene("TerrainEditor"); // Load the scene named "TerrainEditor"
-    }
+    private void ChangeToTerrainEditorScene() => SceneManager.LoadScene("TerrainEditor");
 }
