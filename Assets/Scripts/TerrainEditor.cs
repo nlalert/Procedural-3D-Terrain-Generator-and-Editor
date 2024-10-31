@@ -12,6 +12,12 @@ public class TerrainDeformer : MonoBehaviour
 
     public TerrainGenerator terrainGenerator;  // Reference to the terrain generator that holds the chunks
 
+    private Stack<List<TerrainState>> undoStack = new Stack<List<TerrainState>>();
+    private Stack<List<TerrainState>> redoStack = new Stack<List<TerrainState>>();
+
+    private float undoRedoDelay = 0.2f; // Adjust the delay as needed
+    private float nextUndoRedoTime = 0f;
+    private bool isDeforming = false;
     // Tool selection methods
     public void SetIncreaseHeightTool() {
         currentTool = TerrainTool.IncreaseHeight;
@@ -37,99 +43,107 @@ public class TerrainDeformer : MonoBehaviour
         currentTool = TerrainTool.Smooth;
     }
     
-    public void SetBrushRadius(float radius)
-    {
+    public void SetBrushRadius(float radius) {
         deformRadius = radius;
     }
 
-    public void SetBrushSpeed(float speed)
-    {
+    public void SetBrushSpeed(float speed) {
         deformSpeed = speed;
     }
 
     void Update()
     {
-        if ((currentTool == TerrainTool.IncreaseHeight || currentTool == TerrainTool.DecreaseHeight) && Input.GetMouseButton(0))
+        // Undo/Redo logic
+        if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
         {
-            PerformTerrainDeformation();
+            if (Time.time >= nextUndoRedoTime)
+            {
+                if (Input.GetKey(KeyCode.Z)) { Undo(); nextUndoRedoTime = Time.time + undoRedoDelay; }
+                else if (Input.GetKey(KeyCode.Y)) { Redo(); nextUndoRedoTime = Time.time + undoRedoDelay; }
+            }
         }
-        else if ((currentTool == TerrainTool.IncreaseHeightGaussian || currentTool == TerrainTool.DecreaseHeightGaussian) && Input.GetMouseButton(0))
+
+        if (Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl))
+            nextUndoRedoTime = 0f;
+
+        // Check if the player starts deforming
+        if (Input.GetMouseButtonDown(0))
         {
-            PerformGaussianTerrainDeformation();
+            // **Save initial state before deformation**
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out RaycastHit hit) && hit.collider.CompareTag("Terrain"))
+            {
+                List<TerrainChunk> chunksToModify = GetChunksAroundHitPoint(hit.point);
+                SaveState(chunksToModify);
+                redoStack.Clear(); // Clear redo stack after starting a new action
+            }
+            isDeforming = true;
         }
-        else if (currentTool == TerrainTool.Smooth && Input.GetMouseButton(0))
+
+        // Perform deformation or smoothing based on the current tool
+        if (isDeforming && Input.GetMouseButton(0))
         {
-            PerformTerrainSmoothing();
+            if (currentTool == TerrainTool.IncreaseHeight || currentTool == TerrainTool.DecreaseHeight)
+                PerformTerrainDeformation();
+            else if (currentTool == TerrainTool.IncreaseHeightGaussian || currentTool == TerrainTool.DecreaseHeightGaussian)
+                PerformGaussianTerrainDeformation();
+            else if (currentTool == TerrainTool.Smooth)
+                PerformTerrainSmoothing();
+        }
+
+        // Save the state on mouse release if any deformation occurred
+        if (Input.GetMouseButtonUp(0) && isDeforming)
+        {
+            isDeforming = false;  // Reset the flag
         }
     }
 
-    // Handle regular terrain deformation based on raycasting from the mouse position
+
     void PerformTerrainDeformation()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        // Perform a raycast to detect the terrain where the mouse is pointing
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Terrain"))
         {
-            if (hit.collider.CompareTag("Terrain"))
-            {
-                // Modify terrain chunks in the deformation radius around the hit point
-                ModifyTerrainInChunks(hit.point, isSmoothing: false, isGaussian: false);
-            }
+            ModifyTerrainInChunks(hit.point, isSmoothing: false, isGaussian: false);
         }
     }
 
-    // Handle Gaussian terrain deformation based on raycasting from the mouse position
     void PerformGaussianTerrainDeformation()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        // Perform a raycast to detect the terrain where the mouse is pointing
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Terrain"))
         {
-            if (hit.collider.CompareTag("Terrain"))
-            {
-                // Modify terrain chunks in the Gaussian deformation radius around the hit point
-                ModifyTerrainInChunks(hit.point, isSmoothing: false, isGaussian: true);
-            }
+            ModifyTerrainInChunks(hit.point, isSmoothing: false, isGaussian: true);
         }
     }
 
-    // Handle terrain smoothing based on raycasting from the mouse position
     void PerformTerrainSmoothing()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
         RaycastHit hit;
 
-        // Perform a raycast to detect the terrain where the mouse is pointing
-        if (Physics.Raycast(ray, out hit))
+        if (Physics.Raycast(ray, out hit) && hit.collider.CompareTag("Terrain"))
         {
-            if (hit.collider.CompareTag("Terrain"))
-            {
-                // Smooth terrain chunks in the smoothing radius around the hit point
-                ModifyTerrainInChunks(hit.point, isSmoothing: true);
-            }
+            ModifyTerrainInChunks(hit.point, isSmoothing: true);
         }
     }
 
-    // Modify the vertices of chunks in the surrounding area based on the hit point
-    void ModifyTerrainInChunks(Vector3 hitPoint, bool isSmoothing = false, bool isGaussian = false)
+    List<TerrainChunk> GetChunksAroundHitPoint(Vector3 hitPoint)
     {
-        // Determine the chunk the user clicked on based on the hit point
         Vector2 chunkCoord = new Vector2(Mathf.Floor(hitPoint.x / terrainGenerator.meshSettings.meshWorldSize),
                                          Mathf.Floor(hitPoint.z / terrainGenerator.meshSettings.meshWorldSize));
 
         List<TerrainChunk> chunksToModify = new List<TerrainChunk>();
 
-        // Add the main chunk where the hit point is located
         if (terrainGenerator.terrainChunkDictionary.TryGetValue(chunkCoord, out TerrainChunk mainChunk))
         {
             chunksToModify.Add(mainChunk);
         }
 
-        // Check neighboring chunks in all 8 directions (left, right, back, front, and diagonals)
         Vector2[] neighborOffsets = {
             new Vector2(-1, 0), new Vector2(1, 0),
             new Vector2(0, -1), new Vector2(0, 1),
@@ -146,34 +160,92 @@ public class TerrainDeformer : MonoBehaviour
             }
         }
 
-        if (isSmoothing)
+        return chunksToModify;
+    }
+
+    void ModifyTerrainInChunks(Vector3 hitPoint, bool isSmoothing = false, bool isGaussian = false)
+    {
+        List<TerrainChunk> chunksToModify = GetChunksAroundHitPoint(hitPoint);
+        foreach (TerrainChunk chunk in chunksToModify)
         {
-            SmoothChunkVertices(chunksToModify, hitPoint);  // Smooth vertices across all chunks
-        }
-        else{
-            // Modify vertices in all the relevant chunks
-            foreach (TerrainChunk chunk in chunksToModify)
+            if (isSmoothing)
             {
-                if (isGaussian)
-                {
-                    DeformChunkVerticesGaussian(chunk, hitPoint);  // Apply Gaussian deformation
-                }
-                else
-                {
-                    DeformChunkVertices(chunk, hitPoint);  // Apply linear deformation
-                }
+                SmoothChunkVertices(chunksToModify, hitPoint);
+            }
+            else if (isGaussian)
+            {
+                DeformChunkVerticesGaussian(chunk, hitPoint);
+            }
+            else
+            {
+                DeformChunkVertices(chunk, hitPoint);
             }
         }
     }
 
-    // Modify the vertices of a specific chunk for terrain deformation
-    void DeformChunkVertices(TerrainChunk terrainChunk, Vector3 hitPoint)
+    void SaveState(List<TerrainChunk> chunks)
     {
-        // Get the mesh and vertex data of the chunk
+        List<TerrainState> stateSnapshot = new List<TerrainState>();
+        foreach (var chunk in chunks)
+        {
+            Vector3[] vertices = (Vector3[])chunk.meshFilter.mesh.vertices.Clone();
+            stateSnapshot.Add(new TerrainState(vertices, chunk));
+        }
+        undoStack.Push(stateSnapshot);
+        redoStack.Clear();
+    }
+
+    public void Undo()
+    {
+        if (undoStack.Count > 0)
+        {
+            List<TerrainState> currentState = CaptureCurrentState();  // Capture current state
+            redoStack.Push(currentState);  // Push current state to redo stack
+
+            List<TerrainState> previousState = undoStack.Pop();  // Pop the state to undo to
+            ApplyTerrainState(previousState);  // Apply that state
+        }
+    }
+
+    public void Redo()
+    {
+        if (redoStack.Count > 0)
+        {
+            List<TerrainState> currentState = CaptureCurrentState();  // Capture current state
+            undoStack.Push(currentState);  // Push current state to undo stack
+
+            List<TerrainState> nextState = redoStack.Pop();  // Pop the state to redo to
+            ApplyTerrainState(nextState);  // Apply that state
+        }
+    }
+
+    // Helper method to capture the current state of the chunks
+    List<TerrainState> CaptureCurrentState()
+    {
+        List<TerrainState> stateSnapshot = new List<TerrainState>();
+        foreach (var chunk in terrainGenerator.terrainChunkDictionary.Values)
+        {
+            Vector3[] vertices = (Vector3[])chunk.meshFilter.mesh.vertices.Clone();
+            stateSnapshot.Add(new TerrainState(vertices, chunk));
+        }
+        return stateSnapshot;
+    }
+
+    void ApplyTerrainState(List<TerrainState> stateSnapshot)
+    {
+        foreach (var state in stateSnapshot)
+        {
+            Mesh mesh = state.chunk.meshFilter.mesh;
+            mesh.vertices = state.vertices;
+            mesh.RecalculateNormals();
+            state.chunk.meshCollider.sharedMesh = mesh;
+        }
+    }
+
+    void DeformChunkVertices(TerrainChunk terrainChunk, Vector3 hitPoint) 
+    {
         Mesh mesh = terrainChunk.meshFilter.mesh;
         Vector3[] vertices = mesh.vertices;
-
-        Vector3 localHitPoint = hitPoint - terrainChunk.meshObject.transform.position;
 
         for (int i = 0; i < vertices.Length; i++)
         {
@@ -186,19 +258,16 @@ public class TerrainDeformer : MonoBehaviour
             }
         }
 
-        // Update mesh vertices and recalculate normals for the entire mesh
         mesh.vertices = vertices;
-        mesh.RecalculateNormals();  // Recalculate normals for the entire mesh
+        mesh.RecalculateNormals();
         terrainChunk.meshCollider.sharedMesh = mesh;
     }
 
-    // Modify the vertices of a specific chunk for Gaussian deformation
     void DeformChunkVerticesGaussian(TerrainChunk terrainChunk, Vector3 hitPoint)
     {
         Mesh mesh = terrainChunk.meshFilter.mesh;
         Vector3[] vertices = mesh.vertices;
 
-        Vector3 localHitPoint = hitPoint - terrainChunk.meshObject.transform.position;
         float sigma = deformRadius / 2f;
 
         for (int i = 0; i < vertices.Length; i++)
@@ -213,17 +282,14 @@ public class TerrainDeformer : MonoBehaviour
             }
         }
 
-        // Update mesh vertices and recalculate normals for the entire mesh
         mesh.vertices = vertices;
-        mesh.RecalculateNormals();  // Recalculate normals for the entire mesh
+        mesh.RecalculateNormals();
         terrainChunk.meshCollider.sharedMesh = mesh;
     }
 
-    // Smooth the vertices across all affected chunks
     void SmoothChunkVertices(List<TerrainChunk> terrainChunks, Vector3 hitPoint)
     {
         List<Vector3> verticesInRadius = new List<Vector3>();
-        List<Vector3> worldPositionsInRadius = new List<Vector3>();
 
         foreach (TerrainChunk chunk in terrainChunks)
         {
@@ -238,38 +304,49 @@ public class TerrainDeformer : MonoBehaviour
                 if (distance < deformRadius)
                 {
                     verticesInRadius.Add(vertices[i]);
-                    worldPositionsInRadius.Add(vertexWorldPos);
                 }
             }
         }
 
-        // Smooth the heights by averaging them
-        float averageHeight = 0f;
+        float averageHeight = 0;
         foreach (Vector3 vertex in verticesInRadius)
         {
             averageHeight += vertex.y;
         }
         averageHeight /= verticesInRadius.Count;
 
-        for (int i = 0; i < terrainChunks.Count; i++)
+        foreach (TerrainChunk chunk in terrainChunks)
         {
-            Mesh mesh = terrainChunks[i].meshFilter.mesh;
+            Mesh mesh = chunk.meshFilter.mesh;
             Vector3[] vertices = mesh.vertices;
 
-            for (int j = 0; j < vertices.Length; j++)
+            for (int i = 0; i < vertices.Length; i++)
             {
-                Vector3 vertexWorldPos = terrainChunks[i].meshObject.transform.TransformPoint(vertices[j]);
+                Vector3 vertexWorldPos = chunk.meshObject.transform.TransformPoint(vertices[i]);
                 float distance = Vector3.Distance(vertexWorldPos, hitPoint);
 
                 if (distance < deformRadius)
                 {
-                    vertices[j].y = Mathf.Lerp(vertices[j].y, averageHeight, smoothingSpeed * Time.deltaTime);
+                    vertices[i].y = Mathf.Lerp(vertices[i].y, averageHeight, smoothingSpeed * Time.deltaTime);
                 }
             }
 
             mesh.vertices = vertices;
             mesh.RecalculateNormals();
-            terrainChunks[i].meshCollider.sharedMesh = mesh;
+            chunk.meshCollider.sharedMesh = mesh;
         }
+    }
+}
+
+// Helper class for storing terrain state
+public class TerrainState
+{
+    public Vector3[] vertices;
+    public TerrainChunk chunk;
+
+    public TerrainState(Vector3[] vertices, TerrainChunk chunk)
+    {
+        this.vertices = (Vector3[])vertices.Clone();  // Clone the vertices array for safe storage
+        this.chunk = chunk;
     }
 }

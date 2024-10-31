@@ -17,7 +17,7 @@ public class BrushSettingsUI : MonoBehaviour
         sizeSlider.maxValue = 100.0f;
 
         speedSlider.minValue = 1f;
-        speedSlider.maxValue = 20.0f;
+        speedSlider.maxValue = 30.0f;
 
         brushPanel.SetActive(false);
 

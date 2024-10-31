@@ -255,8 +255,7 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 340301548}
+  m_Children: []
   m_Father: {fileID: 1453340288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
@@ -540,11 +539,11 @@ RectTransform:
   m_Children:
   - {fileID: 655450666}
   - {fileID: 607546409}
-  m_Father: {fileID: 211232791}
+  m_Father: {fileID: 1453340288}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 6.700012, y: 119}
+  m_AnchoredPosition: {x: -630, y: 119}
   m_SizeDelta: {x: 479.8, y: 97.2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &340301549
@@ -791,7 +790,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6055006248695577870, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 43
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 6055006248695577870, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -803,7 +802,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7310685729624307970, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_text
-      value: 'Speed:'
+      value: 'Tools Speed:'
       objectReference: {fileID: 0}
     - target: {fileID: 7310685729624307970, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_fontSize
@@ -1588,6 +1587,7 @@ RectTransform:
   - {fileID: 1277804638}
   - {fileID: 2095935018}
   - {fileID: 211232791}
+  - {fileID: 340301548}
   m_Father: {fileID: 202721445}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1923,7 +1923,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6055006248695577870, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 43
+      value: 40
       objectReference: {fileID: 0}
     - target: {fileID: 6055006248695577870, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -1935,7 +1935,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7310685729624307970, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_text
-      value: 'Brush Size:'
+      value: 'Tools Area:'
       objectReference: {fileID: 0}
     - target: {fileID: 7310685729624307970, guid: 30f68af27ebe88849ac7d5e89419132c, type: 3}
       propertyPath: m_fontSize
