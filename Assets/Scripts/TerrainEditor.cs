@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.EventSystems;
 
 public class TerrainDeformer : MonoBehaviour
 {
@@ -53,6 +54,8 @@ public class TerrainDeformer : MonoBehaviour
 
     void Update()
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        
         // Undo/Redo logic
         if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
         {
