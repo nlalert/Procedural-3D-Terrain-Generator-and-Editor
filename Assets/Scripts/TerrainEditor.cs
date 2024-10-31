@@ -36,6 +36,16 @@ public class TerrainDeformer : MonoBehaviour
     public void SetSmoothTool() {
         currentTool = TerrainTool.Smooth;
     }
+    
+    public void SetBrushRadius(float radius)
+    {
+        deformRadius = radius;
+    }
+
+    public void SetBrushSpeed(float speed)
+    {
+        deformSpeed = speed;
+    }
 
     void Update()
     {
