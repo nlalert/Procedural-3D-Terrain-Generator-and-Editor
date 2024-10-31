@@ -24,7 +24,6 @@ public class CameraController : MonoBehaviour
     private Vector2 cursorHotspot = Vector2.zero; // Position of the custom cursor hotspot
     public MeshSettings meshSettings;   // Reference to mesh settings for terrain boundaries
 
-    private bool terrainFound = false;  // Whether the cursor is over the terrain
     public float minY = 10f;             // Minimum camera height (ground level)
     public float maxY = 220f;           // Maximum camera height
 
@@ -67,21 +66,13 @@ public class CameraController : MonoBehaviour
             // Check if the ray hit the terrain (identified by the "Terrain" tag)
             if (hit.collider.CompareTag("Terrain"))
             {
-                terrainFound = true;
-
                 // Show the custom cursor when hovering over the terrain
                 Cursor.SetCursor(terrainCursorTexture, Vector2.zero, CursorMode.Auto);
             }
             else
             {
-                // Reset to default cursor when not over the terrain
-                terrainFound = false;
                 Cursor.SetCursor(null, cursorHotspot, CursorMode.Auto);
             }
-        }
-        else
-        {
-            terrainFound = false;
         }
     }
 
