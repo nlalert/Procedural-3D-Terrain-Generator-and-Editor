@@ -19,6 +19,7 @@ public class TerrainDeformer : MonoBehaviour
     private float undoRedoDelay = 0.2f; // Adjust the delay as needed
     private float nextUndoRedoTime = 0f;
     private bool isDeforming = false;
+    private bool isSmoothing = false;
     // Tool selection methods
     public void SetIncreaseHeightTool() {
         currentTool = TerrainTool.IncreaseHeight;
@@ -91,7 +92,10 @@ public class TerrainDeformer : MonoBehaviour
             else if (currentTool == TerrainTool.IncreaseHeightGaussian || currentTool == TerrainTool.DecreaseHeightGaussian)
                 PerformGaussianTerrainDeformation();
             else if (currentTool == TerrainTool.Smooth)
-                PerformTerrainSmoothing();
+                if(!isSmoothing){
+                    isSmoothing = true;
+                    PerformTerrainSmoothing();
+                }
         }
 
         // Save the state on mouse release if any deformation occurred
@@ -133,6 +137,7 @@ public class TerrainDeformer : MonoBehaviour
         {
             ModifyTerrainInChunks(hit.point, isSmoothing: true);
         }
+        isSmoothing = false;
     }
 
     List<TerrainChunk> GetChunksAroundHitPoint(Vector3 hitPoint)
@@ -292,53 +297,53 @@ public class TerrainDeformer : MonoBehaviour
 
     void SmoothChunkVertices(List<TerrainChunk> terrainChunks, Vector3 hitPoint)
     {
-        List<Vector3> verticesInRadius = new List<Vector3>();
+        // Transform hitPoint to local space of each chunk and calculate average height
+        float averageHeight = 0f;
+        int count = 0;
 
         foreach (TerrainChunk chunk in terrainChunks)
         {
+            Vector3 localHitPoint = chunk.meshObject.transform.InverseTransformPoint(hitPoint);
             Mesh mesh = chunk.meshFilter.mesh;
             Vector3[] vertices = mesh.vertices;
 
-            for (int i = 0; i < vertices.Length; i++)
+            foreach (Vector3 vertex in vertices)
             {
-                Vector3 vertexWorldPos = chunk.meshObject.transform.TransformPoint(vertices[i]);
-                float distance = Vector3.Distance(vertexWorldPos, hitPoint);
-
-                if (distance < deformRadius)
+                if (Vector3.Distance(vertex, localHitPoint) < deformRadius)
                 {
-                    verticesInRadius.Add(vertices[i]);
+                    averageHeight += vertex.y;
+                    count++;
                 }
             }
         }
+        if (count > 0) averageHeight /= count;
 
-        float averageHeight = 0;
-        foreach (Vector3 vertex in verticesInRadius)
-        {
-            averageHeight += vertex.y;
-        }
-        averageHeight /= verticesInRadius.Count;
-
+        // Adjust vertices towards the average height with smoother and reduced transformations
         foreach (TerrainChunk chunk in terrainChunks)
         {
+            Vector3 localHitPoint = chunk.meshObject.transform.InverseTransformPoint(hitPoint);
             Mesh mesh = chunk.meshFilter.mesh;
             Vector3[] vertices = mesh.vertices;
 
             for (int i = 0; i < vertices.Length; i++)
             {
-                Vector3 vertexWorldPos = chunk.meshObject.transform.TransformPoint(vertices[i]);
-                float distance = Vector3.Distance(vertexWorldPos, hitPoint);
-
-                if (distance < deformRadius)
+                if (Vector3.Distance(vertices[i], localHitPoint) < deformRadius)
                 {
                     vertices[i].y = Mathf.Lerp(vertices[i].y, averageHeight, smoothingSpeed * Time.deltaTime);
                 }
             }
-
+            // Apply vertices updates
             mesh.vertices = vertices;
-            mesh.RecalculateNormals();
-            chunk.meshCollider.sharedMesh = mesh;
+        }
+
+        // Recalculate normals and colliders in a batch step
+        foreach (TerrainChunk chunk in terrainChunks)
+        {
+            chunk.meshFilter.mesh.RecalculateNormals();
+            chunk.meshCollider.sharedMesh = chunk.meshFilter.mesh;
         }
     }
+
 }
 
 // Helper class for storing terrain state

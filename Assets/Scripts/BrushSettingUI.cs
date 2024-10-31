@@ -14,7 +14,7 @@ public class BrushSettingsUI : MonoBehaviour
     void Start()
     {
         sizeSlider.minValue = 5f;
-        sizeSlider.maxValue = 100.0f;
+        sizeSlider.maxValue = 80.0f;
 
         speedSlider.minValue = 1f;
         speedSlider.maxValue = 30.0f;
