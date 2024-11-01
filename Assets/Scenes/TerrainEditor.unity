@@ -6944,6 +6944,7 @@ GameObject:
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -7050,6 +7051,23 @@ MonoBehaviour:
   minY: 10
   maxY: 220
   cursorEffect: {fileID: 102955511}
+--- !u!114 &963194230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c39fb10f139da3145a02dec646211c71, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  resumeButton: {fileID: 1193009633}
+  changeSceneButton: {fileID: 619370873}
+  exitButton: {fileID: 2045536320}
+  escapePanel: {fileID: 2061951003}
+  toolPanel: {fileID: 1453340287}
 --- !u!1 &998625322
 GameObject:
   m_ObjectHideFlags: 0
@@ -7211,7 +7229,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d76980e4a46a70428aa208a10fccb96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentTool: 0
   deformRadius: 10
   deformSpeed: 5
   smoothingSpeed: 2
@@ -7874,7 +7891,7 @@ GameObject:
   - component: {fileID: 1453340290}
   - component: {fileID: 1453340289}
   m_Layer: 5
-  m_Name: Panel
+  m_Name: ToolPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8490,7 +8507,6 @@ GameObject:
   - component: {fileID: 2061951004}
   - component: {fileID: 2061951006}
   - component: {fileID: 2061951005}
-  - component: {fileID: 2061951007}
   m_Layer: 5
   m_Name: Escape
   m_TagString: Untagged
@@ -8558,21 +8574,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2061951003}
   m_CullTransparentMesh: 1
---- !u!114 &2061951007
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2061951003}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c39fb10f139da3145a02dec646211c71, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  resumeButton: {fileID: 1193009633}
-  changeSceneButton: {fileID: 619370873}
-  exitButton: {fileID: 2045536320}
 --- !u!1001 &2089692653
 PrefabInstance:
   m_ObjectHideFlags: 0

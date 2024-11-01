@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 public class TerrainDeformer : MonoBehaviour
 {
     public enum TerrainTool { None, IncreaseHeight, IncreaseHeightGaussian, DecreaseHeight, DecreaseHeightGaussian, Smooth }
-    public TerrainTool currentTool = TerrainTool.None;
+    public static TerrainTool currentTool = TerrainTool.None;
 
     public float deformRadius = 10f;   // Radius within which the terrain will be deformed or smoothed
     public float deformSpeed = 5f;     // Speed for deformation (positive for increase, negative for decrease)

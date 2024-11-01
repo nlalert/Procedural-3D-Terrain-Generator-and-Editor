@@ -67,20 +67,24 @@ public class CameraController : MonoBehaviour
             // Check if the ray hit the terrain (identified by the "Terrain" tag)
             if (hit.collider.CompareTag("Terrain") && !isRightMouseHeld)
             {
-                // Move particle system to the hit point
-                cursorEffect.transform.position = hit.point;
-                // Enable the particle system if it’s disabled
-                if (!cursorEffect.isPlaying)
-                    cursorEffect.Play();
+                if(!PauseUI.isPaused && TerrainDeformer.currentTool != TerrainDeformer.TerrainTool.None){
+                    // Move particle system to the hit point
+                    cursorEffect.transform.position = hit.point;
+                    // Enable the particle system if it’s disabled
+                    if (!cursorEffect.isPlaying)
+                        cursorEffect.Play();
+                }
                 // Show the custom cursor when hovering over the terrain
                 Cursor.SetCursor(terrainCursorTexture, Vector2.zero, CursorMode.Auto);
             }
             else
             {
-                // Stop the particle effect when the cursor is not on the terrain
-                if (cursorEffect.isPlaying)
-                    cursorEffect.Stop();
-                cursorEffect.transform.position = new Vector3(0,-10,0);
+                if(!PauseUI.isPaused){
+                    // Stop the particle effect when the cursor is not on the terrain
+                    if (cursorEffect.isPlaying)
+                        cursorEffect.Stop();
+                    cursorEffect.transform.position = new Vector3(0,1000,0);
+                }
                 Cursor.SetCursor(null, cursorHotspot, CursorMode.Auto);
             }
         }
