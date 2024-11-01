@@ -33,8 +33,12 @@ public class TerrainSettingsUI : MonoBehaviour
 
     // New UI Elements for noiseSeed and offset
     public TMP_InputField noiseSeedInputField;
-    public TMP_InputField offsetXInputField;
-    public TMP_InputField offsetYInputField;
+    // Updated offset X and Y sliders
+    public Slider offsetXSlider;
+    public TextMeshProUGUI offsetXText;
+    public Slider offsetYSlider;
+    public TextMeshProUGUI offsetYText;
+
 
     private void Start()
     {
@@ -62,6 +66,12 @@ public class TerrainSettingsUI : MonoBehaviour
         heightMultiplierSlider.minValue = 0.1f;
         heightMultiplierSlider.maxValue = 100.0f;
 
+        // Set offset sliders range
+        offsetXSlider.minValue = 0;
+        offsetXSlider.maxValue = 500;
+        offsetYSlider.minValue = 0;
+        offsetYSlider.maxValue = 500;
+
         // Initialize dropdown options for map radius
         mapRadiusDropdown.ClearOptions();
         mapRadiusDropdown.AddOptions(new List<string> { "0", "1", "2" });
@@ -76,11 +86,12 @@ public class TerrainSettingsUI : MonoBehaviour
         lacunaritySlider.value = heightMapSettings.noiseSettings.lacunarity;
         heightMultiplierSlider.value = heightMapSettings.heightMultiplier;
         meshScaleSlider.value = meshSettings.meshScale;
+        // Set initial values for offset sliders
+        offsetXSlider.value = heightMapSettings.noiseSettings.offset.x;
+        offsetYSlider.value = heightMapSettings.noiseSettings.offset.y;
 
         // Set initial values for noiseSeed and offset
         noiseSeedInputField.text = heightMapSettings.noiseSettings.seed.ToString();
-        offsetXInputField.text = heightMapSettings.noiseSettings.offset.x.ToString();
-        offsetYInputField.text = heightMapSettings.noiseSettings.offset.y.ToString();
 
         // Add listeners to update ScriptableObject when UI changes
         chunkSizeSlider.onValueChanged.AddListener(OnChunkSizeChanged);
@@ -92,8 +103,9 @@ public class TerrainSettingsUI : MonoBehaviour
         meshScaleSlider.onValueChanged.AddListener(OnMeshScaleChanged);
 
         noiseSeedInputField.onEndEdit.AddListener(OnNoiseSeedChanged);
-        offsetXInputField.onEndEdit.AddListener(OnOffsetXChanged);
-        offsetYInputField.onEndEdit.AddListener(OnOffsetYChanged);
+        offsetXSlider.onValueChanged.AddListener(OnOffsetXChanged);
+        offsetYSlider.onValueChanged.AddListener(OnOffsetYChanged);
+
 
         changeSceneButton.onClick.AddListener(ChangeToTerrainEditorScene);
 
@@ -105,6 +117,8 @@ public class TerrainSettingsUI : MonoBehaviour
         UpdateLacunarityText();
         UpdateHeightMultiplierText();
         UpdateOctavesText();
+        UpdateOffsetXText();
+        UpdateOffsetYText();
 
         mapPreview.DrawMapInEditor();
     }
@@ -173,22 +187,18 @@ public class TerrainSettingsUI : MonoBehaviour
         }
     }
 
-    private void OnOffsetXChanged(string value)
+    private void OnOffsetXChanged(float value)
     {
-        if (float.TryParse(value, out float offsetX))
-        {
-            heightMapSettings.noiseSettings.offset.x = offsetX;
-            mapPreview.DrawMapInEditor();
-        }
+        heightMapSettings.noiseSettings.offset.x = Mathf.Clamp(value, offsetXSlider.minValue, offsetXSlider.maxValue);
+        mapPreview.DrawMapInEditor();
+        UpdateOffsetXText();
     }
 
-    private void OnOffsetYChanged(string value)
+    private void OnOffsetYChanged(float value)
     {
-        if (float.TryParse(value, out float offsetY))
-        {
-            heightMapSettings.noiseSettings.offset.y = offsetY;
-            mapPreview.DrawMapInEditor();
-        }
+        heightMapSettings.noiseSettings.offset.y = Mathf.Clamp(value, offsetYSlider.minValue, offsetYSlider.maxValue);
+        mapPreview.DrawMapInEditor();
+        UpdateOffsetYText();
     }
 
     // Methods to update text fields
@@ -199,7 +209,8 @@ public class TerrainSettingsUI : MonoBehaviour
     private void UpdateHeightMultiplierText() => heightMultiplierText.text = $"{heightMapSettings.heightMultiplier:F2}";
     private void UpdateOctavesText() => octavesText.text = $"{heightMapSettings.noiseSettings.octaves}"; // Update text for octaves
     private void UpdateNoiseScaleText() => noiseScaleText.text = $"{heightMapSettings.noiseSettings.scale}"; // Update text for octaves
-
+    private void UpdateOffsetXText() => offsetXText.text = $"{heightMapSettings.noiseSettings.offset.x}";
+    private void UpdateOffsetYText() => offsetYText.text = $"{heightMapSettings.noiseSettings.offset.y}";
     // Method to change to the TerrainEditor scene
     private void ChangeToTerrainEditorScene() => SceneManager.LoadScene("TerrainEditor");
 }
