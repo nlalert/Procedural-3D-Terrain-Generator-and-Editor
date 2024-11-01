@@ -20,6 +20,8 @@ public class TerrainDeformer : MonoBehaviour
     private float nextUndoRedoTime = 0f;
     private bool isDeforming = false;
     private bool isSmoothing = false;
+
+    public ParticleSystem cursorEffect;   // Assign the particle system in the Inspector
     // Tool selection methods
     public void SetIncreaseHeightTool() {
         currentTool = TerrainTool.IncreaseHeight;
@@ -47,10 +49,22 @@ public class TerrainDeformer : MonoBehaviour
     
     public void SetBrushRadius(float radius) {
         deformRadius = radius;
+        UpdateCursorEffectRadius(); // Update Particle System radius
     }
 
     public void SetBrushSpeed(float speed) {
         deformSpeed = speed;
+    }
+
+    private void UpdateCursorEffectRadius()
+    {
+        if (cursorEffect != null)
+        {
+            var shape = cursorEffect.shape;
+            var emission = cursorEffect.emission;
+            shape.radius = deformRadius; // Set the shape radius to deformRadius
+            emission.rateOverTime = deformRadius * 100;
+        }
     }
 
     void Update()

@@ -30,6 +30,7 @@ public class CameraController : MonoBehaviour
     // To track right-click position for custom cursor display
     private Vector3 rightClickScreenPos;
     private bool isRightMouseHeld = false;  // Whether the right mouse button is held down
+    public ParticleSystem cursorEffect;   // Assign the particle system in the Inspector
 
     void Start()
     {
@@ -64,13 +65,22 @@ public class CameraController : MonoBehaviour
         if (Physics.Raycast(ray, out hit))
         {
             // Check if the ray hit the terrain (identified by the "Terrain" tag)
-            if (hit.collider.CompareTag("Terrain"))
+            if (hit.collider.CompareTag("Terrain") && !isRightMouseHeld)
             {
+                // Move particle system to the hit point
+                cursorEffect.transform.position = hit.point;
+                // Enable the particle system if it’s disabled
+                if (!cursorEffect.isPlaying)
+                    cursorEffect.Play();
                 // Show the custom cursor when hovering over the terrain
                 Cursor.SetCursor(terrainCursorTexture, Vector2.zero, CursorMode.Auto);
             }
             else
             {
+                // Stop the particle effect when the cursor is not on the terrain
+                if (cursorEffect.isPlaying)
+                    cursorEffect.Stop();
+                cursorEffect.transform.position = new Vector3(0,-10,0);
                 Cursor.SetCursor(null, cursorHotspot, CursorMode.Auto);
             }
         }
