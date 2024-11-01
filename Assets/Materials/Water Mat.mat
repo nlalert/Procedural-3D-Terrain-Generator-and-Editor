@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Water Mat
-  m_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}
+  m_Shader: {fileID: 4800000, guid: db1b85e7d9362df44918cea0a9d70b34, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -19,7 +19,7 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: 
+  m_LockedProperties: _Depth
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
@@ -61,9 +61,12 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AbsorptionCoefficient: 0.04
     - _BumpScale: 1
     - _Cutoff: 0.5
+    - _Depth: 5.06
     - _DetailNormalMapScale: 1
+    - _Distance: -132.5
     - _DstBlend: 0
     - _GlossMapScale: 1
     - _Glossiness: 0
@@ -75,9 +78,16 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
+    - _SurfaceTransparency: 0.904
+    - _Transparency: 0.5
     - _UVSec: 0
+    - _WaterDepth: -131.6
     - _ZWrite: 1
     m_Colors:
+    - _AbsorptionColor: {r: 0, g: 0.07019687, b: 1, a: 1}
     - _Color: {r: 0, g: 0.5701069, b: 0.81960785, a: 1}
+    - _DeepWaterColor: {r: 0, g: 0, b: 0.5, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _ShallowWaterColor: {r: 0.5, g: 0.8, b: 1, a: 1}
+    - _WaterColor: {r: 0, g: 0.87526274, b: 1, a: 0.7490196}
   m_BuildTextureStacks: []
